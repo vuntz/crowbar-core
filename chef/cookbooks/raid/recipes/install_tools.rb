@@ -1,4 +1,5 @@
 # Copyright (c) 2013 Dell Inc.
+# Copyright (c) 2014 SUSE Linux GmbH.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +17,7 @@
 ### at some point we'll support raid on other platforms... for now just RHEL derived.
 include_recipe "utils"
 
-return unless ["centos","redhat"].member?(node[:platform]) && !@@is_admin
+return unless node.platform_family == "redhat" && CrowbarHelper.is_admin? node
 
 provisioners = search(:node, "roles:provisioner-server")
 provisioner = provisioners[0] if provisioners

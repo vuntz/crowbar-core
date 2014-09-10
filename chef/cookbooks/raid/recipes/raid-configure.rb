@@ -1,4 +1,5 @@
 # Copyright (c) 2013 Dell Inc.
+# Copyright (c) 2014 SUSE Linux GmbH.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +17,7 @@
 
 include_recipe "utils"
 
-raid_enable = node[:dell_raid][:enable] & @@centos & !@@is_admin
+raid_enable = node[:dell_raid][:enable] & node.platform_family == "redhat" & CrowbarHelper.is_admin? node
 log("BEGIN raid-configure enabled=#{raid_enable}") {level :info} 
 
 config_name = node[:crowbar][:hardware][:raid_set] rescue config_name = "JBODOnly"
