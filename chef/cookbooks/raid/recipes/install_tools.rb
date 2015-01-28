@@ -17,7 +17,7 @@
 ### at some point we'll support raid on other platforms... for now just RHEL derived.
 include_recipe "utils"
 
-return unless node.platform_family == "redhat" && CrowbarHelper.is_admin? node
+return unless node.platform_family == "redhat" && CrowbarHelper.is_admin?(node)
 
 provisioners = search(:node, "roles:provisioner-server")
 provisioner = provisioners[0] if provisioners
@@ -49,7 +49,7 @@ end
 
 bash "install megacli" do
   code <<EOC
-cd /tmp 
+cd /tmp
 [[ -x /opt/MegaRAID/MegaCli/MegaCli64 ]] && exit 0
 for pkg in "linux/MegaCli-8.07.07-1.noarch.rpm"; do
     unzip -j -o "#{megacli}" "$pkg"

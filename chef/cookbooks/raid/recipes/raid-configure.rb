@@ -17,8 +17,8 @@
 
 include_recipe "utils"
 
-raid_enable = node[:dell_raid][:enable] & node.platform_family == "redhat" & CrowbarHelper.is_admin? node
-log("BEGIN raid-configure enabled=#{raid_enable}") {level :info} 
+raid_enable = node[:dell_raid][:enable] & node.platform_family == "redhat" & CrowbarHelper.is_admin?(node)
+log("BEGIN raid-configure enabled=#{raid_enable}") {level :info}
 
 config_name = node[:crowbar][:hardware][:raid_set] rescue config_name = "JBODOnly"
 config_name ="raid-#{config_name}"
@@ -26,17 +26,17 @@ config_bag = data_bag("crowbar-data")
 config = data_bag_item("crowbar-data",config_name) if config_bag.include?(config_name)
 log("Using config: #{config_name}, config is: #{config.inspect}")
 
-begin 
-  ## push the MegaCLI packages, and install them  
+begin
+  ## push the MegaCLI packages, and install them
   include_recipe "raid::install_tools"
 
   raid_raid_config "lsi-raid-config" do
-    config config["config"] 
-    debug_flag node[:raid][:debug]  
+    config config["config"]
+    debug_flag node[:raid][:debug]
     nic_first true
-    action [ :report, :apply, :set_boot ] 
-    problem_file "/var/log/chef/hw-problem.log" 
+    action [ :report, :apply, :set_boot ]
+    problem_file "/var/log/chef/hw-problem.log"
   end
   node.save
 end if raid_enable and !config.nil? and !config.empty?
-log("END raid-configure") {level :info} 
+log("END raid-configure") {level :info}
