@@ -61,16 +61,18 @@ class Provisioner
         end
       end
 
-      def suse_get_repos_from_attributes(node,platform,version)
+      def suse_get_repos_from_attributes(node, platform, version, arch)
         repos = Mash.new
 
         if node[:provisioner][:suse] && node[:provisioner][:suse][:autoyast] && node[:provisioner][:suse][:autoyast][:repos]
-          if node[:provisioner][:suse][:autoyast][:repos][:common]
-            repos = node[:provisioner][:suse][:autoyast][:repos][:common].to_hash
-          end
+          repos_attrs = node[:provisioner][:suse][:autoyast][:repos]
           product = "#{platform}-#{version}"
-          if node[:provisioner][:suse][:autoyast][:repos][product]
-            repos.merge! node[:provisioner][:suse][:autoyast][:repos][product].to_hash
+
+          if repos_attrs[:common] && repos_attrs[:common][arch]
+            repos = repos_attrs[:common][arch].to_hash
+          end
+          if repos_attrs[product] && repos_attrs[product][arch]
+            repos.merge! repos_attrs[product][arch].to_hash
           end
         end
 
@@ -91,7 +93,7 @@ class Provisioner
           storage_available = false
 
           %w(11.3 11.4 12.0 12.1).each do |version|
-            repos.merge! suse_get_repos_from_attributes(node,"suse",version)
+            repos.merge! suse_get_repos_from_attributes(node, "suse", version, node[:architecture])
 
             # Common optional repos (regardless of cloud vs. storage)
             suse_optional_repos(version, :common).each do |name|
