@@ -28,9 +28,9 @@ append_line = ""
 tftproot = node[:provisioner][:root]
 
 pxe_dir="#{tftproot}/discovery/bios"
-pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
-pxecfg_x86_64="#{tftproot}/discovery/pxelinux.cfg/default-x86_64"
-pxecfg_ppc64le="#{tftproot}/discovery/pxelinux.cfg/default-ppc64le"
+pxecfg_dir="#{tftproot}/discovery/bios/pxelinux.cfg"
+pxecfg_x86_64="#{tftproot}/discovery/bios/pxelinux.cfg/default-x86_64"
+pxecfg_ppc64le="#{tftproot}/discovery/bios/pxelinux.cfg/default-ppc64le"
 uefi_dir="#{tftproot}/discovery/efi"
 ueficfg_default="#{tftproot}/discovery/efi/elilo-x86_64.conf"
 
@@ -84,8 +84,8 @@ template pxecfg_x86_64 do
   source "default.erb"
   variables(append_line: "#{append_line} crowbar.state=discovery",
             install_name: "discovery",
-            initrd: "x86_64/initrd0.img",
-            kernel: "x86_64/vmlinuz0")
+            initrd: "../x86_64/initrd0.img",
+            kernel: "../x86_64/vmlinuz0")
 end
 
 template pxecfg_ppc64le do
@@ -95,8 +95,8 @@ template pxecfg_ppc64le do
   source "default.erb"
   variables(append_line: "#{append_line} crowbar.state=discovery",
             install_name: "discovery",
-            initrd: "ppc64le/initrd0.img",
-            kernel: "ppc64le/vmlinuz0")
+            initrd: "../ppc64le/initrd0.img",
+            kernel: "../ppc64le/vmlinuz0")
 end
 
 # UEFI config
@@ -157,8 +157,8 @@ if use_elilo
     source "default.elilo.erb"
     variables(append_line: "#{append_line} crowbar.state=discovery",
               install_name: "discovery",
-              initrd: "x86_64/initrd0.img",
-              kernel: "x86_64/vmlinuz0")
+              initrd: "../x86_64/initrd0.img",
+              kernel: "../x86_64/vmlinuz0")
   end
 end
 

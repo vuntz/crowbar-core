@@ -16,7 +16,7 @@
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
-pxecfg_dir = "#{tftproot}/discovery/pxelinux.cfg"
+pxecfg_dir = "#{tftproot}/discovery/bios/pxelinux.cfg"
 ueficfg_dir = "#{tftproot}/discovery/efi"
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
@@ -138,7 +138,6 @@ if not nodes.nil? and not nodes.empty?
           if mnode.macaddress == mac_list[i]
             ipaddress admin_data_net.address
             options [
-             'option path-prefix "discovery/"',
              'if exists dhcp-parameter-request-list {
     # Always send the PXELINUX options (specified in hexadecimal)
     option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
@@ -150,7 +149,7 @@ if not nodes.nil? and not nodes.empty?
   } else if option arch = 00:09 {
     filename = "discovery/efi_x64/bootx64.efi";
   } else if option arch = 00:0e {
-    option config-file "pxelinux.cfg/default-ppc64le";
+    option config-file "discovery/bios/pxelinux.cfg/default-ppc64le";
     filename = "";
   } else {
     option config-file "pxelinux.cfg/default-x86_64";

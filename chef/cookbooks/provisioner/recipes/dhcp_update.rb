@@ -6,7 +6,6 @@ admin_net = node[:network][:networks]["admin"]
 lease_time = node[:provisioner][:dhcp]["lease-time"]
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
-             'option path-prefix "discovery/"',
              'if exists dhcp-parameter-request-list {
        # Always send the PXELINUX options (specified in hexadecimal)
        option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
@@ -18,7 +17,7 @@ pool_opts = {
      } else if option arch = 00:09 {
        filename = "discovery/efi/bootx64.efi";
      } else if option arch = 00:0e {
-       option config-file "pxelinux.cfg/default-ppc64le";
+       option config-file "discovery/bios/pxelinux.cfg/default-ppc64le";
        filename = "";
      } else {
        option config-file "pxelinux.cfg/default-x86_64";
