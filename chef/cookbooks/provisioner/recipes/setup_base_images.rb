@@ -31,9 +31,8 @@ pxe_dir="#{tftproot}/discovery/bios"
 pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
 pxecfg_x86_64="#{tftproot}/discovery/pxelinux.cfg/default-x86_64"
 pxecfg_ppc64le="#{tftproot}/discovery/pxelinux.cfg/default-ppc64le"
-uefi_dir="#{tftproot}/discovery"
-ueficfg_dir="#{tftproot}/discovery/elilo.cfg"
-ueficfg_default="#{tftproot}/discovery/elilo.cfg/default-x86_64"
+uefi_dir="#{tftproot}/discovery/efi"
+ueficfg_default="#{tftproot}/discovery/efi/elilo-x86_64.conf"
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
@@ -58,7 +57,7 @@ directory "#{tftproot}/discovery" do
   action :create
 end
 
-[pxe_dir, pxecfg_dir, uefi_dir, "#{uefi_dir}/efi_x64", "#{uefi_dir}/efi_ia32", ueficfg_dir].each do |dir|
+[pxe_dir, pxecfg_dir, uefi_dir].each do |dir|
   directory dir do
     recursive true
     mode 0755
@@ -108,19 +107,19 @@ if node[:platform] != "suse"
     code <<EOC
 cd #{uefi_dir}
 tar xzf '#{tftproot}/files/elilo-3.14-all.tar.gz'
-mv elilo-3.14-x86_64.efi efi_x64/bootx64.efi
-mv elilo-3.14-ia32.efi efi_ia32/bootia32.efi
+mv elilo-3.14-x86_64.efi bootx64.efi
+mv elilo-3.14-ia32.efi bootia32.efi
 rm elilo*.efi elilo*.tar.gz || :
 EOC
-    not_if "test -f '#{uefi_dir}/efi_x64/bootx64.efi'"
+    not_if "test -f '#{uefi_dir}/bootx64.efi'"
   end
 else
   if node["platform_version"].to_f < 12.0
     package "elilo"
 
     bash "Install bootx64.efi" do
-      code "cp /usr/lib64/efi/elilo.efi #{uefi_dir}/efi_x64/bootx64.efi"
-      not_if "cmp /usr/lib64/efi/elilo.efi #{uefi_dir}/efi_x64/bootx64.efi"
+      code "cp /usr/lib64/efi/elilo.efi #{uefi_dir}/bootx64.efi"
+      not_if "cmp /usr/lib64/efi/elilo.efi #{uefi_dir}/bootx64.efi"
     end
   else
     # we use grub2; steps taken from
