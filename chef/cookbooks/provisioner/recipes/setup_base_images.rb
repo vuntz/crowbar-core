@@ -30,6 +30,8 @@ tftproot = node[:provisioner][:root]
 pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
 pxecfg_default="#{tftproot}/discovery/pxelinux.cfg/default"
 uefi_dir="#{tftproot}/discovery"
+powernvdir="#{tftproot}/discovery/powernv/pxelinux.cfg"
+powernv_default="#{tftproot}/discovery/powernv/pxelinux.cfg/default"
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
@@ -160,6 +162,25 @@ if use_elilo
               initrd: "initrd0.img",
               kernel: "vmlinuz0")
   end
+end
+
+directory powernvdir do
+  recursive true
+  mode 0755
+  owner "root"
+  group "root"
+  action :create
+end
+
+template powernv_default do
+  mode 0644
+  owner "root"
+  group "root"
+  source "default.erb"
+  variables(append_line: "#{append_line} crowbar.state=discovery",
+            install_name: "discovery",
+            initrd: "initrd0.img",
+            kernel: "vmlinuz0")
 end
 
 if node[:platform] == "suse"
