@@ -611,8 +611,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
       node.set[:provisioner][:available_oses][os][arch][:initrd] = " "
       node.set[:provisioner][:available_oses][os][arch][:append_line] = " "
     else
-      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../#{os}/#{arch}/install/#{kernel}"
-      node.set[:provisioner][:available_oses][os][arch][:initrd] = "../#{os}/#{arch}/install/#{initrd}"
+      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../../#{os}/#{arch}/install/#{kernel}"
+      node.set[:provisioner][:available_oses][os][arch][:initrd] = "../../#{os}/#{arch}/install/#{initrd}"
       node.set[:provisioner][:available_oses][os][arch][:append_line] = append
     end
     node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files
