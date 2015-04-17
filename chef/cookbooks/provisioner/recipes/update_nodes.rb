@@ -16,9 +16,8 @@
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
-pxecfg_dir = "#{tftproot}/discovery/x86_64/pxelinux.cfg"
-uefi_dir = "#{tftproot}/discovery/x86_64"
-powernv_dir = "#{tftproot}/discovery/powernv/pxelinux.cfg"
+pxecfg_dir = "#{tftproot}/discovery/pxelinux.cfg"
+ueficfg_dir = "#{tftproot}/discovery/elilo.cfg"
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
 provisioner_web = "http://#{admin_ip}:#{web_port}"
@@ -74,14 +73,12 @@ if not nodes.nil? and not nodes.empty?
     # we're trying to delete the node.
     if boot_ip_hex
       pxefile = "#{pxecfg_dir}/#{boot_ip_hex}"
-      uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
-      powernvfile = "#{powernv_dir}/#{boot_ip_hex}"
+      uefifile = "#{ueficfg_dir}/#{boot_ip_hex}.conf"
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{mnode["crowbar"]["boot_ip_hex"]}"
     else
       Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
       pxefile = nil
       uefifile = nil
-      powernvfile = nil
       windows_tftp_file = nil
     end
 
@@ -103,7 +100,7 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile,uefifile,powernvfile,windows_tftp_file].each do |f|
+      [pxefile,uefifile,windows_tftp_file].each do |f|
         file f do
           action :delete
         end unless f.nil?
@@ -126,7 +123,7 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile,uefifile,powernvfile].each do |f|
+      [pxefile,uefifile].each do |f|
         file f do
           action :delete
         end unless f.nil?
@@ -141,19 +138,28 @@ if not nodes.nil? and not nodes.empty?
           if mnode.macaddress == mac_list[i]
             ipaddress admin_data_net.address
             options [
-     '      if option arch = 00:06 {
-        filename = "discovery/x86/bootia32.efi";
-     } else if option arch = 00:07 {
-        filename = "discovery/x86_64/bootx64.efi";
-     } else if option arch = 00:09 {
-        filename = "discovery/x86_64/bootx64.efi";
-     } else if option arch = 00:0e {
-        option path-prefix "discovery/powernv/";
-        filename = "";
-     } else {
-        filename = "discovery/x86_64/pxelinux.0";
-     }',
-                     "next-server #{admin_ip}"
+             'option path-prefix "discovery/"',
+             'if exists dhcp-parameter-request-list {
+    # Always send the PXELINUX options (specified in hexadecimal)
+    option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+  }',
+             'if option arch = 00:06 {
+    option config-file "elilo.cfg/default-ia32";
+    filename = "discovery/efi_ia32/bootia32.efi";
+  } else if option arch = 00:07 {
+    option config-file "elilo.cfg/default-x86_64";
+    filename = "discovery/efi_x64/bootx64.efi";
+  } else if option arch = 00:09 {
+    option config-file "elilo.cfg/default-x86_64";
+    filename = "discovery/efi_x64/bootx64.efi";
+  } else if option arch = 00:0e {
+    option config-file "pxelinux.cfg/default-ppc64le";
+    filename = "";
+  } else {
+    option config-file "pxelinux.cfg/default-x86_64";
+    filename = "discovery/bios/pxelinux.0";
+  }',
+             "next-server #{admin_ip}"
                     ]
           end
           action :add
@@ -313,8 +319,7 @@ if not nodes.nil? and not nodes.empty?
         end
 
         [{file: pxefile, src: "default.erb"},
-         {file: uefifile, src: "default.elilo.erb"},
-         {file: powernvfile, src: "default.erb"}].each do |t|
+         {file: uefifile, src: "default.elilo.erb"}].each do |t|
           template t[:file] do
             mode 0644
             owner "root"
@@ -329,8 +334,7 @@ if not nodes.nil? and not nodes.empty?
 
       else
         [{file: pxefile, src: "default.erb"},
-         {file: uefifile, src: "default.elilo.erb"},
-         {file: powernvfile, src: "default.erb"}].each do |t|
+         {file: uefifile, src: "default.elilo.erb"}].each do |t|
           template t[:file] do
             mode 0644
             owner "root"

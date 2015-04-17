@@ -6,18 +6,27 @@ admin_net = node[:network][:networks]["admin"]
 lease_time = node[:provisioner][:dhcp]["lease-time"]
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
-             '      if option arch = 00:06 {
-      filename = "discovery/x86/bootia32.efi";
-   } else if option arch = 00:07 {
-      filename = "discovery/x86_64/bootx64.efi";
-   } else if option arch = 00:09 {
-      filename = "discovery/x86_64/bootx64.efi";
-   } else if option arch = 00:0e {
-      option path-prefix "discovery/powernv/";
-      filename = "";
-   } else {
-      filename = "discovery/x86_64/pxelinux.0";
-   }',
+             'option path-prefix "discovery/"',
+             'if exists dhcp-parameter-request-list {
+       # Always send the PXELINUX options (specified in hexadecimal)
+       option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+     }',
+             'if option arch = 00:06 {
+       option config-file "elilo.cfg/default-ia32";
+       filename = "discovery/efi_ia32/bootia32.efi";
+     } else if option arch = 00:07 {
+       option config-file "elilo.cfg/default-x86_64";
+       filename = "discovery/efi_x64/bootx64.efi";
+     } else if option arch = 00:09 {
+       option config-file "elilo.cfg/default-x86_64";
+       filename = "discovery/efi_x64/bootx64.efi";
+     } else if option arch = 00:0e {
+       option config-file "pxelinux.cfg/default-ppc64le";
+       filename = "";
+     } else {
+       option config-file "pxelinux.cfg/default-x86_64";
+       filename = "discovery/bios/pxelinux.0";
+     }',
              "next-server #{admin_ip}"],
   "host" => ["deny unknown-clients"]
 }

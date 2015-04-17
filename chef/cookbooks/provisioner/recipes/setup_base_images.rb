@@ -27,31 +27,18 @@ append_line = ""
 
 tftproot = node[:provisioner][:root]
 
-pxecfg_dir="#{tftproot}/discovery/x86_64/pxelinux.cfg"
-pxecfg_default="#{tftproot}/discovery/x86_64/pxelinux.cfg/default"
-uefi_dir="#{tftproot}/discovery/x86_64"
-powernvdir="#{tftproot}/discovery/powernv/pxelinux.cfg"
-powernv_default="#{tftproot}/discovery/powernv/pxelinux.cfg/default"
+pxe_dir="#{tftproot}/discovery/bios"
+pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
+pxecfg_x86_64="#{tftproot}/discovery/pxelinux.cfg/default-x86_64"
+pxecfg_ppc64le="#{tftproot}/discovery/pxelinux.cfg/default-ppc64le"
+uefi_dir="#{tftproot}/discovery"
+ueficfg_dir="#{tftproot}/discovery/elilo.cfg"
+ueficfg_default="#{tftproot}/discovery/elilo.cfg/default-x86_64"
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
 else
   crowbar_key = ""
-end
-
-# FIXME: What is the purpose of this, really? If pxecfg_default does not exist
-# the root= parameters will not get appended to the kernel commandline. (Luckily
-# we don't need those with the SLES base sledgehammer)
-# Later on pxecfg_default will even be replace with a link to "discovery"
-# Probably this pxecfg_default check can go a way and we can just unconditionally
-# append the root= parameters?
-if File.exists? pxecfg_default
-  append_line = IO.readlines(pxecfg_default).detect{ |l| /APPEND/i =~ l }
-  if append_line
-    append_line = append_line.strip.gsub(/(^APPEND |initrd=[^ ]+|console=[^ ]+|rhgb|quiet|crowbar\.[^ ]+)/i,"").strip
-  elsif node[:platform] != "suse"
-    append_line = "root=/sledgehammer.iso rootfstype=iso9660 rootflags=loop"
-  end
 end
 
 if node[:provisioner][:use_serial_console]
@@ -71,33 +58,46 @@ directory "#{tftproot}/discovery" do
   action :create
 end
 
+[pxe_dir, pxecfg_dir, uefi_dir, "#{uefi_dir}/efi_x64", "#{uefi_dir}/efi_ia32", ueficfg_dir].each do |dir|
+  directory dir do
+    recursive true
+    mode 0755
+    owner "root"
+    group "root"
+    action :create
+  end
+end
+
 # PXE config
 ["share","lib"].each do |d|
   next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
   bash "Install pxelinux.0" do
-    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/x86_64/"
-    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/x86_64/pxelinux.0"
+    code "cp /usr/#{d}/syslinux/pxelinux.0 #{pxe_dir}/"
+    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{pxe_dir}/pxelinux.0"
   end
   break
 end
 
-directory pxecfg_dir do
-  recursive true
-  mode 0755
-  owner "root"
-  group "root"
-  action :create
-end
-
-template pxecfg_default do
+template pxecfg_x86_64 do
   mode 0644
   owner "root"
   group "root"
   source "default.erb"
   variables(append_line: "#{append_line} crowbar.state=discovery",
             install_name: "discovery",
-            initrd: "initrd0.img",
-            kernel: "vmlinuz0")
+            initrd: "x86_64/initrd0.img",
+            kernel: "x86_64/vmlinuz0")
+end
+
+template pxecfg_ppc64le do
+  mode 0644
+  owner "root"
+  group "root"
+  source "default.erb"
+  variables(append_line: "#{append_line} crowbar.state=discovery",
+            install_name: "discovery",
+            initrd: "ppc64le/initrd0.img",
+            kernel: "ppc64le/vmlinuz0")
 end
 
 # UEFI config
@@ -108,20 +108,19 @@ if node[:platform] != "suse"
     code <<EOC
 cd #{uefi_dir}
 tar xzf '#{tftproot}/files/elilo-3.14-all.tar.gz'
-mv elilo-3.14-x86_64.efi bootx64.efi
-mv elilo-3.14-ia32.efi bootia32.efi
-mv elilo-3.14-ia64.efi bootia64.efi
+mv elilo-3.14-x86_64.efi efi_x64/bootx64.efi
+mv elilo-3.14-ia32.efi efi_ia32/bootia32.efi
 rm elilo*.efi elilo*.tar.gz || :
 EOC
-    not_if "test -f '#{uefi_dir}/bootx64.efi'"
+    not_if "test -f '#{uefi_dir}/efi_x64/bootx64.efi'"
   end
 else
   if node["platform_version"].to_f < 12.0
     package "elilo"
 
     bash "Install bootx64.efi" do
-      code "cp /usr/lib64/efi/elilo.efi #{uefi_dir}/bootx64.efi"
-      not_if "cmp /usr/lib64/efi/elilo.efi #{uefi_dir}/bootx64.efi"
+      code "cp /usr/lib64/efi/elilo.efi #{uefi_dir}/efi_x64/bootx64.efi"
+      not_if "cmp /usr/lib64/efi/elilo.efi #{uefi_dir}/efi_x64/bootx64.efi"
     end
   else
     # we use grub2; steps taken from
@@ -152,35 +151,16 @@ else
 end
 
 if use_elilo
-  template "#{uefi_dir}/elilo.conf" do
+  template ueficfg_default do
     mode 0644
     owner "root"
     group "root"
     source "default.elilo.erb"
     variables(append_line: "#{append_line} crowbar.state=discovery",
               install_name: "discovery",
-              initrd: "initrd0.img",
-              kernel: "vmlinuz0")
+              initrd: "x86_64/initrd0.img",
+              kernel: "x86_64/vmlinuz0")
   end
-end
-
-directory powernvdir do
-  recursive true
-  mode 0755
-  owner "root"
-  group "root"
-  action :create
-end
-
-template powernv_default do
-  mode 0644
-  owner "root"
-  group "root"
-  source "default.erb"
-  variables(append_line: "#{append_line} crowbar.state=discovery",
-            install_name: "discovery",
-            initrd: "initrd0.img",
-            kernel: "vmlinuz0")
 end
 
 if node[:platform] == "suse"
