@@ -27,9 +27,9 @@ append_line = ""
 
 tftproot = node[:provisioner][:root]
 
-pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
-pxecfg_default="#{tftproot}/discovery/pxelinux.cfg/default"
-uefi_dir="#{tftproot}/discovery"
+pxecfg_dir="#{tftproot}/discovery/x86_64/pxelinux.cfg"
+pxecfg_default="#{tftproot}/discovery/x86_64/pxelinux.cfg/default"
+uefi_dir="#{tftproot}/discovery/x86_64"
 powernvdir="#{tftproot}/discovery/powernv/pxelinux.cfg"
 powernv_default="#{tftproot}/discovery/powernv/pxelinux.cfg/default"
 
@@ -75,8 +75,8 @@ end
 ["share","lib"].each do |d|
   next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
   bash "Install pxelinux.0" do
-    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/"
-    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/pxelinux.0"
+    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/x86_64/"
+    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/x86_64/pxelinux.0"
   end
   break
 end

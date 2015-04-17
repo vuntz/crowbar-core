@@ -16,8 +16,8 @@
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
-pxecfg_dir = "#{tftproot}/discovery/pxelinux.cfg"
-uefi_dir = "#{tftproot}/discovery"
+pxecfg_dir = "#{tftproot}/discovery/x86_64/pxelinux.cfg"
+uefi_dir = "#{tftproot}/discovery/x86_64"
 powernv_dir = "#{tftproot}/discovery/powernv/pxelinux.cfg"
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
@@ -142,16 +142,16 @@ if not nodes.nil? and not nodes.empty?
             ipaddress admin_data_net.address
             options [
      '      if option arch = 00:06 {
-        filename = "discovery/bootia32.efi";
+        filename = "discovery/x86/bootia32.efi";
      } else if option arch = 00:07 {
-        filename = "discovery/bootx64.efi";
+        filename = "discovery/x86_64/bootx64.efi";
      } else if option arch = 00:09 {
-        filename = "discovery/bootx64.efi";
+        filename = "discovery/x86_64/bootx64.efi";
      } else if option arch = 00:0e {
         option path-prefix "discovery/powernv/";
         filename = "";
      } else {
-        filename = "discovery/pxelinux.0";
+        filename = "discovery/x86_64/pxelinux.0";
      }',
                      "next-server #{admin_ip}"
                     ]

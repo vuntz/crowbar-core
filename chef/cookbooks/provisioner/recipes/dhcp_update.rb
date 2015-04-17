@@ -7,16 +7,16 @@ lease_time = node[:provisioner][:dhcp]["lease-time"]
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
              '      if option arch = 00:06 {
-      filename = "discovery/bootia32.efi";
+      filename = "discovery/x86/bootia32.efi";
    } else if option arch = 00:07 {
-      filename = "discovery/bootx64.efi";
+      filename = "discovery/x86_64/bootx64.efi";
    } else if option arch = 00:09 {
-      filename = "discovery/bootx64.efi";
+      filename = "discovery/x86_64/bootx64.efi";
    } else if option arch = 00:0e {
       option path-prefix "discovery/powernv/";
       filename = "";
    } else {
-      filename = "discovery/pxelinux.0";
+      filename = "discovery/x86_64/pxelinux.0";
    }',
              "next-server #{admin_ip}"],
   "host" => ["deny unknown-clients"]

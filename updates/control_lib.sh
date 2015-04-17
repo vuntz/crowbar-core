@@ -169,10 +169,10 @@ wait_for_pxe() {
 
     until [ 1 = $done ] ; do
         if [ -n "$state" ]; then
-            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
+            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/x86_64/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
             ret=$?
         else
-            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/pxelinux.cfg/$MYHEXIP" > /dev/null
+            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/x86_64/pxelinux.cfg/$MYHEXIP" > /dev/null
             ret=$?
         fi
 
