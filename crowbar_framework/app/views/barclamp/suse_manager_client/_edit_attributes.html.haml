@@ -1,0 +1,12 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header show_raw_deployment?, true
+
+  .panel-body
+    = string_field :activation_key
+    %span.help-block
+      = t(".activation_key_hint")
+
+    = string_field :manager_server
+    %span.help-block
+      = t(".manager_server_hint", :link => link_to_proposal(:dns))
