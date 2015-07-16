@@ -12,13 +12,13 @@ class Proposal < ActiveRecord::Base
   serialize :properties, Utils::JSONWithIndifferentAccess
 
   validates :barclamp, :properties, presence: true
-  validates :name, uniqueness: { scope: :barclamp, message: I18n.t('model.service.name_exists') }
-  validates :name, presence: { message: I18n.t('model.service.too_short') }
-  validate  :name, :name_without_invalid_chars
-  validate  :name, :name_not_on_blacklist
+  validates :name, uniqueness: { scope: :barclamp, message: I18n.t("model.service.name_exists") }
+  validates :name, presence: { message: I18n.t("model.service.too_short") }
+  validate :name, :name_without_invalid_chars
+  validate :name, :name_not_on_blacklist
 
   after_initialize :load_properties_template, :set_default_name
-  before_save      :update_proposal_id
+  before_save :update_proposal_id
 
   # XXX: a 'registered' barclamp could have a has_many :proposals and have a factory
   # method for creating them. Then the check for barclamp arg would not be needed,
@@ -67,22 +67,22 @@ class Proposal < ActiveRecord::Base
     forbidden_names = ["template", "nodes", "commit", "status"]
 
     if forbidden_names.include?(self.name)
-      self.errors.add(:name, I18n.t('model.service.illegal_name', names: forbidden_names.to_sentence))
+      self.errors.add(:name, I18n.t("model.service.illegal_name", names: forbidden_names.to_sentence))
     end
   end
 
   def name_without_invalid_chars
     if self.name =~ /[^A-Za-z0-9_]/
-      self.errors.add(:name, I18n.t('model.service.illegal_chars'))
+      self.errors.add(:name, I18n.t("model.service.illegal_chars"))
     end
   end
 
   def load_properties_template
     self.properties ||= Utils::JSONWithIndifferentAccess.load(File.read(properties_template_path))
   rescue Errno::ENOENT, Errno::EACCES
-    raise TemplateMissing.new(I18n.t('model.service.template_missing', name: self.barclamp))
+    raise TemplateMissing.new(I18n.t("model.service.template_missing", name: self.barclamp))
   rescue JSON::ParserError
-    raise TemplateInvalid.new(I18n.t('model.service.template_invalid', name: self.barclamp))
+    raise TemplateInvalid.new(I18n.t("model.service.template_invalid", name: self.barclamp))
   end
 
   def properties_template_path

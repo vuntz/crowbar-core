@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-require 'wsman'
-require 'wsman_attributes'
+require "wsman"
+require "wsman_attributes"
 
-opts = { :host => ARGV[0], :user => ARGV[1], :password => ARGV[2], :port => 443, :debug_time => false }
+opts = { host: ARGV[0], user: ARGV[1], password: ARGV[2], port: 443, debug_time: false }
 attrs = {}
 
 count=ARGV.length - 3

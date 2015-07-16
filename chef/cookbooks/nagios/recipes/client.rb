@@ -30,9 +30,9 @@ nodes = search(:node, "roles:provisioner-server#{env_filter}")
 
 # Get a list of provisioner addresses, if the provisioner is up by now.
 if nodes and not nodes.empty?
-  prov_addresses = nodes.map do |n| 
+  prov_addresses = nodes.map do |n|
     n = node if node.name == n.name
-    Nagios::Evaluator.get_value_by_type(n, :admin_ip_eval) 
+    Nagios::Evaluator.get_value_by_type(n, :admin_ip_eval)
   end
   # The master admin node is the first one in the list
   provisioner_ip =  prov_addresses[0]
@@ -104,15 +104,15 @@ end
 ntp_servers = node[:ntp][:ntp_servers] unless node[:ntp].nil? or node[:ntp][:ntp_servers].nil? or node[:ntp][:ntp_servers].empty?
 ntp_servers = "127.0.0.1" if node[:ntp].nil? or node[:ntp][:ntp_servers].nil? or node[:ntp][:ntp_servers].empty?
 
-#### setup variables for the different components   
+#### setup variables for the different components
 
 own_admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 unless node[:platform] == "windows"
   # common
-  vars = { :lib64 => lib64, :mon_host => mon_host, :provisioner_ip => provisioner_ip, :domain_name => domain_name, :admin_interface => admin_interface, :plugin_dir => plugin_dir, :own_admin_ip => own_admin_ip}
+  vars = { lib64: lib64, mon_host: mon_host, provisioner_ip: provisioner_ip, domain_name: domain_name, admin_interface: admin_interface, plugin_dir: plugin_dir, own_admin_ip: own_admin_ip}
   # ntp
-  vars.merge!({:ntp_servers => ntp_servers})
+  vars.merge!({ntp_servers: ntp_servers})
 
   template "/etc/nagios/nrpe.cfg" do
     source "nrpe.cfg.erb"
@@ -141,7 +141,7 @@ unless node[:platform] == "windows"
   service "nagios-nrpe-server" do
     service_name nrpe_svc_name
     action :enable
-    supports :restart => true, :reload => true
+    supports restart: true, reload: true
   end
 
   # Fix rabbit tests

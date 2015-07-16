@@ -36,15 +36,14 @@ end
 
 class Nagios
 class Evaluator
-  
   def initialize(node)
-    @b = binding    
+    @b = binding
   end
-  
+
   def eval_with_context(str)
     eval(str,@b) if str and @b
   end
-  
+
   def log_eval_vars()
     eval("Chef::Log.info('locals:'+local_variables.join(':') + '\nglobals:'+global_variables.join(':'))")
   end
@@ -55,10 +54,9 @@ class Evaluator
     val = e.eval_with_context(location)
     Chef::Log.debug("Looking at #{location} for #{type}. Got: #{val}")
     val
-    rescue 
+    rescue
        nil
   end
-  
 end
 end
- 
+

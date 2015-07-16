@@ -53,7 +53,7 @@ package rpcService
 service rpcService do
   running true
   enabled true
-  action [ :enable, :start ]
+  action [:enable, :start]
 end
 
 directory "/var/log/crowbar/sledgehammer" do
@@ -65,10 +65,10 @@ end
 service "nfs-kernel-server" do
   service_name "nfs" if node[:platform] =~ /^(redhat|centos)$/
   service_name "nfsserver" if node[:platform] == "suse"
-  supports :restart => true, :status => true, :reload => true
+  supports restart: true, status: true, reload: true
   running true
   enabled true
-  action [ :enable, :start ]
+  action [:enable, :start]
 end
 
 execute "nfs-export" do
@@ -81,7 +81,7 @@ template "/etc/exports" do
   group "root"
   owner "root"
   mode 0644
-  variables(:admin_subnet => node["network"]["networks"]["admin"]["subnet"],
-            :admin_netmask => node["network"]["networks"]["admin"]["netmask"])
+  variables(admin_subnet: node["network"]["networks"]["admin"]["subnet"],
+            admin_netmask: node["network"]["networks"]["admin"]["netmask"])
   notifies :run, "execute[nfs-export]", :delayed
 end

@@ -14,7 +14,7 @@
 #
 
 name "raid-configure"
-description "RAID configure - configure the RAID volumes on the local machine" 
+description "RAID configure - configure the RAID volumes on the local machine"
 run_list(
   "recipe[raid::raid-configure]"
 )

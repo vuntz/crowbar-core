@@ -90,13 +90,13 @@ module Crowbar
         end
       end
     end
-    
+
     # nil if not applicable, true = if success, false if failed
     def failed?
-       status === 'failed'
+       status === "failed"
     end
 
-    # for localization, will lookup text before the :  
+    # for localization, will lookup text before the :
     def fail_reason
        s = if failed?
          item["deployment"][self.barclamp]["crowbar-failed"].to_s
@@ -106,20 +106,20 @@ module Crowbar
          "No success information for proposal: #{barclamp}-#{name} (status #{status})"
        end
        out = s.split(":")
-       out[0] = I18n.t out[0], :default=> out[0]
+       out[0] = I18n.t out[0], default: out[0]
        return out.join(":").to_s
     end
-    
+
     def description
-      item['description']
+      item["description"]
     end
-    
+
     def elements
-      raw_data['deployment'][self.barclamp]["elements"]
+      raw_data["deployment"][self.barclamp]["elements"]
     end
 
     def all_elements
-      raw_data['deployment'][self.barclamp]["element_order"].flatten.uniq
+      raw_data["deployment"][self.barclamp]["element_order"].flatten.uniq
     end
 
     def role

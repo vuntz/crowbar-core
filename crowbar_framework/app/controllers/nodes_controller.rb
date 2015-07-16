@@ -25,18 +25,18 @@ class NodesController < ApplicationController
       @nodes = result.find_all { |node| node.role? params[:role] }
       if params.has_key?(:names_only)
          names = @nodes.map { |node| node.handle }
-         @nodes = {:role=>params[:role], :nodes=>names, :count=>names.count}
+         @nodes = {role: params[:role], nodes: names, count: names.count}
       end
     else
       @nodes = {}
       get_nodes_and_groups(params[:name])
-      flash[:notice] = "<b>#{t :warning, :scope => :error}:</b> #{t :no_nodes_found, :scope => :error}" if @nodes.empty? #.html_safe if @nodes.empty?
+      flash[:notice] = "<b>#{t :warning, scope: :error}:</b> #{t :no_nodes_found, scope: :error}" if @nodes.empty? #.html_safe if @nodes.empty?
     end
 
     respond_to do |format|
       format.html
-      format.xml { render :xml => @nodes }
-      format.json { render :json => @nodes }
+      format.xml { render xml: @nodes }
+      format.json { render json: @nodes }
     end
   end
 
@@ -72,11 +72,11 @@ class NodesController < ApplicationController
 
   def bulk
     @report = {
-      :success => [],
-      :failed => [],
-      :duplicate_public => false,
-      :duplicate_alias => false,
-      :group_error => false,
+      success: [],
+      failed: [],
+      duplicate_public: false,
+      duplicate_alias: false,
+      group_error: false
     }.tap do |report|
       node_values = params[:node] || {}
 
@@ -151,7 +151,7 @@ class NodesController < ApplicationController
             unless node.group == node_attributes["group"]
               unless node_attributes["group"].blank? or node_attributes["group"] =~ /^[a-zA-Z][a-zA-Z0-9._:-]+$/
                 report[:group_error] = true
-                raise I18n.t("nodes.list.group_error", :failed => node.name)
+                raise I18n.t("nodes.list.group_error", failed: node.name)
               end
 
               node.group = node_attributes["group"]
@@ -186,13 +186,13 @@ class NodesController < ApplicationController
         "nodes.list.failed"
       end
 
-      flash[:alert] = I18n.t(translation, :failed => node_list.to_sentence)
+      flash[:alert] = I18n.t(translation, failed: node_list.to_sentence)
     elsif @report[:success].length > 0
       node_list = @report[:success].map do |node_name|
         node_name.split(".").first
       end
 
-      flash[:notice] = I18n.t("nodes.list.updated", :success => node_list.to_sentence)
+      flash[:notice] = I18n.t("nodes.list.updated", success: node_list.to_sentence)
     else
       flash[:info] = I18n.t("nodes.list.nochange")
     end
@@ -207,15 +207,15 @@ class NodesController < ApplicationController
 
         unless families.has_key? family
           families[family] = {
-            :names => [],
-            :family => node.family
+            names: [],
+            family: node.family
           }
         end
 
         families[family][:names].push({
-          :alias => node.alias,
-          :description => node.description,
-          :handle => node.handle
+          alias: node.alias,
+          description: node.description,
+          handle: node.handle
         })
       end
     end
@@ -228,9 +228,9 @@ class NodesController < ApplicationController
 
   def group_change
     NodeObject.find_node_by_name(params[:id]).tap do |node|
-      raise ActionController::RoutingError.new('Not Found') if node.nil?
+      raise ActionController::RoutingError.new("Not Found") if node.nil?
 
-      if params[:group].downcase.eql? 'automatic'
+      if params[:group].downcase.eql? "automatic"
         node.group = ""
       else
         node.group = params[:group]
@@ -239,14 +239,14 @@ class NodesController < ApplicationController
       node.save
 
       Rails.logger.info "Node #{node.name} (#{node.alias}) changed its group to be #{node.group || "automatic"}."
-      render :inline => "Added #{node.name} to #{node.group}.", :cache => false
+      render inline: "Added #{node.name} to #{node.group}.", cache: false
     end
   end
 
   def status
     @result = {
-      :nodes => {},
-      :groups => {}
+      nodes: {},
+      groups: {}
     }.tap do |result|
       begin
         NodeObject.all.each do |node|
@@ -254,8 +254,8 @@ class NodesController < ApplicationController
 
           result[:groups][group_name] ||= begin
             {
-              :tooltip => "",
-              :status => {
+              tooltip: "",
+              status: {
                 "ready" => 0,
                 "failed" => 0,
                 "pending" => 0,
@@ -272,8 +272,8 @@ class NodesController < ApplicationController
           end
 
           result[:nodes][node.handle] = {
-            :class => node.status,
-            :status => I18n.t(node.state, :scope => :state, :default => node.state.titlecase)
+            class: node.status,
+            status: I18n.t(node.state, scope: :state, default: node.state.titlecase)
           }
         end
       rescue => e
@@ -283,7 +283,7 @@ class NodesController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render :json => @result }
+      format.json { render json: @result }
     end
   end
 
@@ -292,18 +292,18 @@ class NodesController < ApplicationController
     name = params[:name] || params[:id]
     machine = NodeObject.find_node_by_name name
     if machine.nil?
-      render :text=>"Could not find node '#{name}'", :status => 404 and return
+      render text: "Could not find node '#{name}'", status: 404 and return
     else
       case action
-      when 'reinstall', 'reset', 'update', 'delete'
+      when "reinstall", "reset", "update", "delete"
         machine.set_state(action)
-      when 'reboot', 'shutdown', 'poweron', 'powercycle', 'poweroff', 'identify', 'allocate'
+      when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
         machine.send(action)
       else
-        render :text=>"Invalid hit request '#{action}'", :status => 500 and return
+        render text: "Invalid hit request '#{action}'", status: 500 and return
       end
     end
-    render :text=>"Attempting '#{action}' for node '#{machine.name}'", :status => 200
+    render text: "Attempting '#{action}' for node '#{machine.name}'", status: 200
   end
 
   # GET /nodes/1
@@ -312,7 +312,7 @@ class NodesController < ApplicationController
     get_node_and_network(params[:id] || params[:name])
     if @node.nil?
       msg = "Node #{params[:id] || params[:name]}: not found"
-      if request.format == 'html'
+      if request.format == "html"
         flash[:notice] = msg
         return redirect_to nodes_path
       else
@@ -322,8 +322,8 @@ class NodesController < ApplicationController
     get_nodes_and_groups(params[:name], false)
     respond_to do |format|
       format.html # show.html.erb
-      format.xml  { render :xml => @node }
-      format.json { render :json => (params[:key].nil? ? @node : @node[params[:key]]) }
+      format.xml  { render xml: @node }
+      format.json { render json: (params[:key].nil? ? @node : @node[params[:key]]) }
     end
   end
 
@@ -343,13 +343,13 @@ class NodesController < ApplicationController
     get_node_and_network(params[:id] || params[:name])
     raise ActionController::RoutingError.new("Node #{params[:id] || params[:name]} not found.") if @node.nil?
 
-    if params[:submit] == t('nodes.form.allocate')
+    if params[:submit] == t("nodes.form.allocate")
       if save_node
         @node.allocate!
-        flash[:notice] = t('nodes.form.allocate_node_success')
+        flash[:notice] = t("nodes.form.allocate_node_success")
       end
-    elsif params[:submit] == t('nodes.form.save')
-      flash[:notice] = t('nodes.form.save_node_success') if save_node
+    elsif params[:submit] == t("nodes.form.save")
+      flash[:notice] = t("nodes.form.save_node_success") if save_node
     else
       Rails.logger.warn "Unknown action for node edit: #{params[:submit]}"
       flash[:notice] = "Unknown action: #{params[:submit]}"
@@ -366,14 +366,14 @@ class NodesController < ApplicationController
       @attribute = @attribute[element]
       raise ActionController::RoutingError.new("Node #{params[:name]}: unknown attribute #{params[:path].join('/')}") if @attribute.nil?
     end
-    render :json => {:value => @attribute}
+    render json: {value: @attribute}
   end
 
   private
 
   def save_node
     if params[:group] and params[:group] != "" and !(params[:group] =~ /^[a-zA-Z][a-zA-Z0-9._:-]+$/)
-      flash[:alert] = t('nodes.list.group_error', :failed => @node.name)
+      flash[:alert] = t("nodes.list.group_error", failed: @node.name)
       return false
     end
 
@@ -383,7 +383,7 @@ class NodesController < ApplicationController
       (params[:raid_type] == "raid5" and raid_disks_selected < 3) or \
       (params[:raid_type] == "raid6" and raid_disks_selected < 4) or \
       (params[:raid_type] == "raid10" and raid_disks_selected < 4)
-      flash[:alert] = t("nodes.form.raid_disks_selected", :node => @node.name)
+      flash[:alert] = t("nodes.form.raid_disks_selected", node: @node.name)
       return false
     end
 
@@ -391,16 +391,16 @@ class NodesController < ApplicationController
       # if we don't have OpenStack, availability_zone will be empty; which is
       # okay, because we don't care about this in that case
       {
-        :bios_set      => :bios,
-        :raid_set      => :raid,
-        :alias         => :alias,
-        :public_name   => :public_name,
-        :group         => :group,
-        :description   => :description,
-        :availability_zone => :availability_zone,
-        :intended_role => :intended_role,
-        :raid_type     => :raid_type,
-        :raid_disks    => :raid_disks
+        bios_set: :bios,
+        raid_set: :raid,
+        alias: :alias,
+        public_name: :public_name,
+        group: :group,
+        description: :description,
+        availability_zone: :availability_zone,
+        intended_role: :intended_role,
+        raid_type: :raid_type,
+        raid_disks: :raid_disks
       }.each do |attr, param|
         @node.send("#{attr}=", params[param]) if params.key?(param)
       end
@@ -414,8 +414,8 @@ class NodesController < ApplicationController
     rescue StandardError => e
       log_exception(e)
       flash[:alert] = I18n.t("nodes.form.failed",
-                             :node => @node.name,
-                             :message => e.message)
+                             node: @node.name,
+                             message: e.message)
       false
     end
   end
@@ -426,7 +426,7 @@ class NodesController < ApplicationController
     @node = NodeObject.find_node_by_name(node_name) if @node.nil?
     if @node
       # If we're in discovery mode, then we have a temporary DHCP IP address.
-      if not ['discovering', 'discovered', 'hardware-installing', 'hardware-installed'].include? @node.state
+      if not ["discovering", "discovered", "hardware-installing", "hardware-installed"].include? @node.state
         intf_if_map = @node.build_node_map
         # build network information (this may need to move into the object)
         @node.networks.each do |intf, data|
@@ -448,11 +448,11 @@ class NodesController < ApplicationController
           end
         end
         @network = network.sort
-        @network << ['[not managed]', @node.unmanaged_interfaces] unless @node.unmanaged_interfaces.empty?
-      elsif @node.state == 'discovering'
-        @network = [ ['[dhcp]', 'discovering'] ]
+        @network << ["[not managed]", @node.unmanaged_interfaces] unless @node.unmanaged_interfaces.empty?
+      elsif @node.state == "discovering"
+        @network = [["[dhcp]", "discovering"]]
       else
-        @network = [ ['[dhcp]', @node[:ipaddress]] ]
+        @network = [["[dhcp]", @node[:ipaddress]]]
       end
     end
 
@@ -466,9 +466,9 @@ class NodesController < ApplicationController
       raw_nodes = NodeObject.all
       raw_nodes.each do |node|
         @sum = @sum + node.name.hash
-        @nodes[node.handle] = { :alias=>node.alias, :description=>node.description, :status=>node.status, :state=>node.state }
+        @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
         group = node.group
-        @groups[group] = { :automatic=>!node.display_set?('group'), :status=>{"ready"=>0, "failed"=>0, "unknown"=>0, "unready"=>0, "pending"=>0}, :nodes=>{} } unless @groups.key? group
+        @groups[group] = { automatic: !node.display_set?("group"), status: {"ready"=>0, "failed"=>0, "unknown"=>0, "unready"=>0, "pending"=>0}, nodes: {} } unless @groups.key? group
         @groups[group][:nodes][node.group_order] = node.handle
         @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
         if node.handle === node_name
@@ -478,5 +478,4 @@ class NodesController < ApplicationController
       end
     @draggable = draggable
   end
-
 end

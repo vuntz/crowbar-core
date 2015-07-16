@@ -26,10 +26,10 @@ where set can be:
 
 =end
 
-require 'csv'
-require 'rubygems'
-require 'json'
-require 'yaml'
+require "csv"
+require "rubygems"
+require "json"
+require "yaml"
 
 bios_maps = {
   "C6100" => "bios_settings.c6100",
@@ -104,7 +104,7 @@ class UnifiedPECSchema
         "versions" => {
           "type" => "seq",
           "required" => false,
-          "sequence" => [ { "type" => "str" } ] },
+          "sequence" => [{ "type" => "str" }] },
         "style" => {
           "type" => "str",
           "required" => true,
@@ -116,7 +116,7 @@ class UnifiedPECSchema
             "raw_tokens" => {
               "type" => "seq",
               "required" => false,
-              "sequence" => [ { "type" => "str" } ] },
+              "sequence" => [{ "type" => "str" }] }
           }
         }
       }
@@ -130,7 +130,7 @@ def clean_str(s)
   s.gsub(/[^a-zA-Z_0-9. ]/, "_").strip
 end
 
-unless ENV['BC_CACHE'] && ENV['BC_DIR']
+unless ENV["BC_CACHE"] && ENV["BC_DIR"]
   STDERR.puts("BC_CACHE and BC_DIR must be set un your environment.")
   STDERR.puts("If you are running this from outside the crowbar buils system,")
   STDERR.puts("please invoke legacy_token_map_maker.rb with:")
@@ -149,8 +149,8 @@ barclamp_params=YAML.load(File.open("#{ENV['BC_DIR']}/crowbar.yml"))
 setupbios = cache_path = nil
 barclamp_params["extra_files"].each do |k|
   next unless k =~ /setupbios/
-  setupbios,cache_path = k.split(' ',2)
-  cache_path ||= ''
+  setupbios,cache_path = k.split(" ",2)
+  cache_path ||= ""
   setupbios = "#{ENV['BC_CACHE']}/files/#{cache_path}/#{setupbios.split('/')[-1]}"
   break
 end
@@ -161,14 +161,14 @@ unless File.directory?(tmpdir)
   exit(1)
 end
 
-at_exit {system("rm -rf #{tmpdir}")}
+at_exit { system("rm -rf #{tmpdir}") }
 
 unless File.exists?(setupbios)
   STDERR.puts("Cannot find the setupbios tarball at #{setupbios}")
   exit(1)
 end
 
-system("tar -x -C '#{tmpdir}' -f '#{setupbios}' #{bios_maps.values.sort.map{|f|"setupbios/#{f}"}.join(' ')}")
+system("tar -x -C '#{tmpdir}' -f '#{setupbios}' #{bios_maps.values.sort.map{ |f|"setupbios/#{f}" }.join(' ')}")
 
 # Parse each bios mapping file from setupbios, saving
 # all the information we will need to valdate pec-bios-options and create a schema map.
@@ -180,13 +180,13 @@ bios_maps.each do |sys_name,bios_map|
     exit 1
   end
   bios_schemas[sys_name] = UnifiedPECSchema.new
-  File.open("#{tmpdir}/setupbios/#{bios_map}",'r') do |bios_map_file|
+  File.open("#{tmpdir}/setupbios/#{bios_map}","r") do |bios_map_file|
     bios_map_file.each do |real_line|
-      line = real_line.gsub(/[#;].*/,'').strip
+      line = real_line.gsub(/[#;].*/,"").strip
       next if line.empty?
-      setting_name, default, token_mapping = line.split(',',3).map{|s|s.strip}
-      token_settings = token_mapping.split(',').map do |t|
-        t.strip.split(':',2).map{|tv|tv.strip}[-1]
+      setting_name, default, token_mapping = line.split(",",3).map{ |s|s.strip }
+      token_settings = token_mapping.split(",").map do |t|
+        t.strip.split(":",2).map{ |tv|tv.strip }[-1]
       end
       bios_schemas[sys_name].add_attribute(setting_name,token_settings)
       unless bios_schemas[sys_name].value_ok?(setting_name,default)
@@ -212,12 +212,12 @@ end
 
 # Grab the bios options we want out of pec-bios-options.csv
 STDERR.puts("Processing #{ENV['BC_DIR']}/tools/maps/pec-bios-options.csv:")
-reader = CSV.open("#{ENV['BC_DIR']}/tools/maps/pec-bios-options.csv",'r')
+reader = CSV.open("#{ENV['BC_DIR']}/tools/maps/pec-bios-options.csv","r")
 reader.shift
 line = 1
 reader.each do |row|
   line += 1
-  sys_name,token,crowbar_config,setting = row.map{|e|clean_str(e)}
+  sys_name,token,crowbar_config,setting = row.map{ |e|clean_str(e) }
   unless bios_maps[sys_name]
     STDERR.puts("Unknown system type #{sys_name} on line #{line} of pec-bios-options.csv")
     STDERR.puts("Skipping line #{line}: #{row.join(',')}")
@@ -246,7 +246,7 @@ reader.close
 
 # Save our newly created schema files
 bios_schemas.each do |k,v|
-  File.open("bios-set-#{k}.schema",'w') do |f|
+  File.open("bios-set-#{k}.schema","w") do |f|
     f.puts(JSON.pretty_generate(v.to_hash))
   end
 end

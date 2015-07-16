@@ -14,5 +14,5 @@
 #
 
 actions :dump
-attribute :pgm, :kind_of => String
-attribute :pgm_dir, :kind_of => String
+attribute :pgm, kind_of: String
+attribute :pgm_dir, kind_of: String

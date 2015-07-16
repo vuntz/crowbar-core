@@ -13,35 +13,34 @@
 # limitations under the License.
 #
 
-require 'pty'
-require File.join(File.dirname(__FILE__), 'raid_data')
+require "pty"
+require File.join(File.dirname(__FILE__), "raid_data")
 
 class Crowbar
 class RAID
 class LSI_sasIrcu < Crowbar::RAID::Driver
-      
   attr_accessor :controllers, :debug, :nodeinfo
 
-  CMD = '/usr/sbin/sas2ircu'
+  CMD = "/usr/sbin/sas2ircu"
   MAX_RAID10_DISKS = 10
   RAID_MAP = {
     "RAID0" => :RAID0,
     "RAID1" => :RAID1,
     "RAID1E" => :RAID1E,
     "RAID10" => :RAID10
-  }  
+  }
   INV_MAP = {
-    :RAID0 => "RAID0",
-    :RAID1 => "RAID1",
-    :RAID1E => "RAID1E",
-    :RAID10 => "RAID10"
-  }  
+    RAID0: "RAID0",
+    RAID1: "RAID1",
+    RAID1E: "RAID1E",
+    RAID10: "RAID10"
+  }
   @@re_lines = /^-+$/
 
   def initialize(node)
     @nodeinfo = node
   end
-      
+
   def enumerate_topology
     @controllers = []
 
@@ -79,18 +78,18 @@ class LSI_sasIrcu < Crowbar::RAID::Driver
 
           @controllers << c
         end
-      end 
+      end
     rescue Exception => e
       puts "Failed enumeration of controller/devices on system using sas2ircu...#{e.message}"
     end
 
     @controllers
   end
-      
+
   def describe
     "sas2ircu driver"
   end
-      
+
 =begin
 Issue the command to create a RAID volue:
  The format of the CREATE command is
@@ -118,9 +117,9 @@ Issue the command to create a RAID volue:
     where noprompt is an optional argument that eliminates
         warnings and prompts
 
-=end  
+=end
   def create_vd(controller, volume)
-    ## build up the command...     
+    ## build up the command...
     max_size       = (Crowbar::RAID::TERA * 2 - Crowbar::RAID::MEGA) / Crowbar::RAID::MEGA
     size           = nil
     curr_boot_mode = nil
@@ -142,7 +141,7 @@ Issue the command to create a RAID volue:
       puts "Unable to determine boot mode from CB wall..defaulting to BIOS mode"
       no_boot_mode = true
     end
-    
+
     log("create_vd: ircu doesn't support setting stripe size", :ERROR) if volume[:stripe_size]
 
     ## Limit the number of disks being used if it's a RAID 10 array
@@ -176,13 +175,13 @@ Issue the command to create a RAID volue:
     puts "Creating VD with size of #{size}"
 
     text = ""
-    run_tool(0, nil, [cid, "create", vol_type, size, disk_ids.join(" "), "'#{name}'", "noprompt"]){ |f| 
+    run_tool(0, nil, [cid, "create", vol_type, size, disk_ids.join(" "), "'#{name}'", "noprompt"]){ |f|
       text = f.readlines
     }
     text.to_s.strip
   rescue
     log("create returned: #{text}", :ERROR)
-    raise 
+    raise
   end
 
   def delete_vd(volume)
@@ -198,7 +197,7 @@ Issue the command to create a RAID volue:
     end
   rescue
     log("delete returned: #{text}", :ERROR)
-    raise 
+    raise
   end
 
   # nic_first is ignored here.
@@ -207,7 +206,7 @@ Issue the command to create a RAID volue:
     ## if we have a volume, otherwise, first drive.
     begin
       if volume and volume.raid_level != :JBOD
-        bootVol = volume.vol_id          
+        bootVol = volume.vol_id
         log("Will use boot volume:#{bootVol}")
         puts "Will use boot volume:#{bootVol}"
         run_tool(0, nil, [controller.controller_id, "bootir", "#{bootVol}"]) if (bootVol)
@@ -215,8 +214,8 @@ Issue the command to create a RAID volue:
         d = controller.disks[0]
         d = volume.members[0] if volume and !volume.members.empty?
         boot = "#{d.enclosure}:#{d.slot}" if ((d.enclosure) and (d.slot))
-        log("Will use boot disk: #{boot}")                    
-        puts "Will use boot disk: #{boot}"                    
+        log("Will use boot disk: #{boot}")
+        puts "Will use boot disk: #{boot}"
         run_tool(0, nil, [controller.controller_id, "bootencl", boot]) if (boot)
       else
       end
@@ -248,7 +247,7 @@ Issue the command to create a RAID volue:
       c.volumes << rv
     end
   end
-      
+
   CNTR_KEY_MAP = {
     "Controller type" => :product_name,
     "Bus" => :bus,
@@ -266,13 +265,13 @@ Issue the command to create a RAID volue:
   }
 
   def parse_cntr_info(lines, raw_cntr)
-    c = Controller.new(:controller_id => raw_cntr[0],
-                       :vendor_id => raw_cntr[2],
-                       :sub_vendor_id => raw_cntr[5],
-                       :device_id => raw_cntr[3],
-                       :sub_device_id => raw_cntr[6],
-                       :device_type => raw_cntr[1],
-                       :pci_address => raw_cntr[4])
+    c = Controller.new(controller_id: raw_cntr[0],
+                       vendor_id: raw_cntr[2],
+                       sub_vendor_id: raw_cntr[5],
+                       device_id: raw_cntr[3],
+                       sub_device_id: raw_cntr[6],
+                       device_type: raw_cntr[1],
+                       pci_address: raw_cntr[4])
 
     c.set(:supported_raid_levels, INV_MAP.keys << :JBOD)
 
@@ -309,7 +308,7 @@ Issue the command to create a RAID volue:
     rv = nil
     begin
       line = lines.shift
- 
+
       if line =~ /^IR volume (\d+)\s*/
         rv = Crowbar::RAID::Volume.new
         rv.controller = controller
@@ -328,7 +327,7 @@ Issue the command to create a RAID volue:
         controller.disks.each do |d|
           if d.enclosure == enclosure and d.slot == slot
             rd = d
-            break 
+            break
           end
         end
         unless rd
@@ -380,7 +379,7 @@ Issue the command to create a RAID volue:
     rd = nil
     begin
       line = lines.shift
- 
+
       if line =~ /^Device is a (.*)$/
         if $1 == "Hard disk"
           rd = Crowbar::RAID::RaidDisk.new
@@ -412,7 +411,7 @@ Issue the command to create a RAID volue:
         log("IRCU Disk Unknown key: #{key} #{value}", :WARN)
       end
     end while lines.length > 0
-    disks    
+    disks
   end
 
   ## Rudimentary algorithm to find array size...assumes that ##
@@ -424,13 +423,13 @@ Issue the command to create a RAID volue:
     array_size = nil
     case raid_level
       when :RAID0
-        array_size = num_disks * disk_size 
+        array_size = num_disks * disk_size
       when :RAID1
-        array_size = (num_disks / 2 ) * disk_size 
+        array_size = (num_disks / 2 ) * disk_size
       when :RAID10
-        array_size = (num_disks / 2 ) * disk_size 
+        array_size = (num_disks / 2 ) * disk_size
       when :RAID5
-        array_size = (num_disks - 1 ) * disk_size 
+        array_size = (num_disks - 1 ) * disk_size
       else
         puts "Unknown raid level requested..returning nil"
     end
@@ -442,15 +441,15 @@ Issue the command to create a RAID volue:
 
     return array_size
   end
-   
+
 =begin
   Output from the LSI util is broken into stanzas delineated with something like:
 ------------------------------------------------------------------------
 Controller information
 ------------------------------------------------------------------------
 
-This method finds a stanza by name and returns an array with its content 
-=end  
+This method finds a stanza by name and returns an array with its content
+=end
   def find_stanza(lines,name)
     lines = lines.dup
     begin
@@ -458,26 +457,24 @@ This method finds a stanza by name and returns an array with its content
       skip_to_find lines,@@re_lines
       lines.shift
       #make sure it's the right one.
-    end while lines.length > 0 and  lines[0].strip.casecmp(name) != 0 
+    end while lines.length > 0 and  lines[0].strip.casecmp(name) != 0
     lines.shift # skip stanza name and marker
     lines.shift
     log("start of #{name} is #{lines[0]}")
-    
-    #lines now starts with the right stanzs.... filter out the rest.    
-    ours = skip_to_find lines,@@re_lines    
-    ours    
+
+    #lines now starts with the right stanzs.... filter out the rest.
+    ours = skip_to_find lines,@@re_lines
+    ours
   end
 
-  def run_tool(success, error, args, &block)    
+  def run_tool(success, error, args, &block)
     cmd = [CMD]
     cmd = cmd + [*args]
     run_command(cmd.join(" "), success, error, &block)
   end
-  
 end # This driver
 end # RAID
 end # Crowbar
-
 
 if __FILE__ == $0
   $in_chef=false

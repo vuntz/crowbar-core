@@ -25,9 +25,8 @@ bmc="bmc-2013-10-22.tgz"
 setupbios="setupbios-2013-10-03.tgz"
 socflash="socflash_v10601.zip"
 
-
 ###
-# these gems will be loaded by chef providers.. 
+# these gems will be loaded by chef providers..
 # so make sure they're installed early
 %w{libxml-ruby xml-simple}.each { |pkg|
   a = gem_package pkg

@@ -16,7 +16,6 @@
 #
 
 class GangliaController < BarclampController
-
   protected
 
   def initialize_service

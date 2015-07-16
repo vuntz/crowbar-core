@@ -15,12 +15,12 @@
 # limitations under the License.
 #
 
-require 'pp'
-require 'chef'
-require 'json'
-require 'hash_only_merge'
-require 'securerandom'
-require 'timeout'
+require "pp"
+require "chef"
+require "json"
+require "hash_only_merge"
+require "securerandom"
+require "timeout"
 
 class ServiceObject
   include CrowbarPacemakerProxy
@@ -32,7 +32,7 @@ class ServiceObject
   attr_accessor :validation_errors
 
   def initialize(thelogger)
-    @bc_name = 'unknown'
+    @bc_name = "unknown"
     @logger = thelogger
     @validation_errors = []
   end
@@ -143,11 +143,11 @@ class ServiceObject
 # Locking Routines
 #
   def acquire_lock(name)
-    FileLock.acquire(name, :logger => @logger)
+    FileLock.acquire(name, logger: @logger)
   end
 
   def release_lock(f)
-    FileLock.release(f, :logger => @logger)
+    FileLock.release(f, logger: @logger)
   end
 
 #
@@ -190,9 +190,9 @@ class ServiceObject
       next if node.nil?
 
       pre_cached_nodes[n] = node
-      delay << n if node.crowbar['state'] != "ready" and !delay.include?(n)
+      delay << n if node.crowbar["state"] != "ready" and !delay.include?(n)
     end
-    [ delay, pre_cached_nodes ]
+    [delay, pre_cached_nodes]
   end
 
   # Get a hash of {node => [roles], node1 => [roles]}
@@ -223,8 +223,8 @@ class ServiceObject
           node = pre_cached_nodes[node_name]
 
           # Nothing to wait for so mark them applying now.
-          node.crowbar['state'] = 'applying'
-          node.crowbar['state_owner'] = "#{bc}-#{inst}"
+          node.crowbar["state"] = "applying"
+          node.crowbar["state_owner"] = "#{bc}-#{inst}"
           node.save
         end
       else
@@ -250,7 +250,7 @@ class ServiceObject
       release_lock f
     end
 
-    [ delay, pre_cached_nodes ]
+    [delay, pre_cached_nodes]
   end
 
   # Each node keeps a list of roles (belonging to the current proposal) that
@@ -285,8 +285,8 @@ class ServiceObject
         next if node.nil?
 
         # Nothing to delay so mark them applying.
-        node.crowbar['state'] = 'ready'
-        node.crowbar['state_owner'] = ""
+        node.crowbar["state"] = "ready"
+        node.crowbar["state_owner"] = ""
         node.save
       end
     ensure
@@ -374,7 +374,7 @@ class ServiceObject
           db.save if dequeued
         end
 
-        return [ delay, pre_cached_nodes ]
+        return [delay, pre_cached_nodes]
       end
 
       # Delay not empty, we're missing some nodes.
@@ -399,7 +399,7 @@ class ServiceObject
     prop["deployment"][bc]["crowbar-queued"] = true
     prop.save
     @logger.debug("queue proposal: exit #{inst} #{bc}")
-    [ delay, pre_cached_nodes ]
+    [delay, pre_cached_nodes]
   end
 
   # Removes the proposal reference from the queue, updates the proposal as not queued
@@ -411,7 +411,7 @@ class ServiceObject
 
       # The elements = item["elements"] is on purpose to get the assignment out of the element.
       # Find the proposal to delete, get its elements (nodes)
-      queue.delete_if { |item| item["barclamp"] == bc and item["inst"] == inst and ((elements = item["elements"]) or true)}
+      queue.delete_if { |item| item["barclamp"] == bc and item["inst"] == inst and ((elements = item["elements"]) or true) }
 
       # Remove the pending roles for the current proposal from the node records.
       remove_pending_elements(bc, inst, elements) if elements
@@ -453,7 +453,7 @@ class ServiceObject
       release_lock f
     end
     @logger.debug("dequeue proposal: exit #{inst} #{bc}")
-    return dequeued ? [200, {}] : [400, '']
+    return dequeued ? [200, {}] : [400, ""]
   end
 
   #
@@ -595,7 +595,7 @@ class ServiceObject
 # API Functions
 #
   def versions
-    [200, { :versions => [ "1.0" ] }]
+    [200, { versions: ["1.0"] }]
   end
 
   def transition
@@ -640,7 +640,7 @@ class ServiceObject
     return [404, {}] if role.nil?
     reverse_deps = RoleObject.reverse_dependencies(role_name)
     if !reverse_deps.empty?
-      raise(I18n.t('model.service.would_break_dependency', :name => @bc_name, :dependson => reverse_deps.to_sentence))
+      raise(I18n.t("model.service.would_break_dependency", name: @bc_name, dependson: reverse_deps.to_sentence))
     else
       # By nulling the elements, it functions as a remove
       dep = role.override_attributes
@@ -720,7 +720,7 @@ class ServiceObject
       if optional
         @logger.info "No optional \"#{bc}\" dependency proposal found for \"#{@bc_name}\" proposal."
       else
-        raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => bc))
+        raise(I18n.t("model.service.dependency_missing", name: @bc_name, dependson: bc))
       end
     end
 
@@ -766,7 +766,7 @@ class ServiceObject
   # FIXME: check if it is overridden and move to caller
   def create_proposal
     prop = Proposal.new(barclamp: @bc_name)
-    raise(I18n.t('model.service.template_missing', :name => @bc_name )) if prop.nil?
+    raise(I18n.t("model.service.template_missing", name: @bc_name )) if prop.nil?
     prop.raw_data
   end
 
@@ -774,14 +774,14 @@ class ServiceObject
   def proposal_create(params)
     base_id = params["id"]
     params["id"] = "bc-#{@bc_name}-#{params["id"]}"
-    if FORBIDDEN_PROPOSAL_NAMES.any?{|n| n == base_id}
-      return [403,I18n.t('model.service.illegal_name', names: FORBIDDEN_PROPOSAL_NAMES.to_sentence)]
+    if FORBIDDEN_PROPOSAL_NAMES.any?{ |n| n == base_id }
+      return [403,I18n.t("model.service.illegal_name", names: FORBIDDEN_PROPOSAL_NAMES.to_sentence)]
     end
 
     prop = Proposal.where(barclamp: @bc_name, name: base_id).first
-    return [400, I18n.t('model.service.name_exists')] unless prop.nil?
-    return [400, I18n.t('model.service.too_short')] if base_id.length == 0
-    return [400, I18n.t('model.service.illegal_chars')] if base_id =~ /[^A-Za-z0-9_]/
+    return [400, I18n.t("model.service.name_exists")] unless prop.nil?
+    return [400, I18n.t("model.service.too_short")] if base_id.length == 0
+    return [400, I18n.t("model.service.illegal_chars")] if base_id =~ /[^A-Za-z0-9_]/
 
     proposal = create_proposal
     proposal["deployment"][@bc_name]["config"]["environment"] = "#{@bc_name}-config-#{base_id}"
@@ -824,7 +824,7 @@ class ServiceObject
   # FIXME: most of these can be validations on the model itself,
   # preferrably refactored into Validator classes.
   def save_proposal!(prop, options = {})
-    options.reverse_merge!(:validate_after_save => true)
+    options.reverse_merge!(validate_after_save: true)
     clean_proposal(prop.raw_data)
     validate_proposal(prop.raw_data)
     validate_proposal_elements(prop.elements)
@@ -839,15 +839,15 @@ class ServiceObject
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
 
     if prop.nil?
-      [404, "#{I18n.t('.cannot_find', :scope=>'model.service')}: #{@bc_name}.#{inst}"]
+      [404, "#{I18n.t('.cannot_find', scope: 'model.service')}: #{@bc_name}.#{inst}"]
     elsif prop["deployment"][@bc_name]["crowbar-committing"]
-      [402, "#{I18n.t('.already_commit', :scope=>'model.service')}: #{@bc_name}.#{inst}"]
+      [402, "#{I18n.t('.already_commit', scope: 'model.service')}: #{@bc_name}.#{inst}"]
     else
       response = nil
       begin
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
-        save_proposal!(prop, :validate_after_save => validate_after_save)
+        save_proposal!(prop, validate_after_save: validate_after_save)
         response = active_update prop.raw_data, inst, in_queue
       rescue Chef::Exceptions::ValidationFailed => e
         response = [400, "Failed to validate proposal: #{e.message}"]
@@ -878,18 +878,18 @@ class ServiceObject
       uniq_elements  = elements.uniq
 
       if uniq_elements.length != elements.length
-        raise I18n.t('proposal.failures.duplicate_elements_in_role') + " " + role
+        raise I18n.t("proposal.failures.duplicate_elements_in_role") + " " + role
       end
 
       uniq_elements.each do |element|
         if is_cluster? element
           unless cluster_exists? element
-            raise I18n.t('proposal.failures.unknown_cluster') + " " + cluster_name(element)
+            raise I18n.t("proposal.failures.unknown_cluster") + " " + cluster_name(element)
           end
         else
           nodes = NodeObject.find_nodes_by_name element
           if nodes.nil? || nodes.empty?
-            raise I18n.t('proposal.failures.unknown_node') + " " + element
+            raise I18n.t("proposal.failures.unknown_node") + " " + element
           end
         end
       end
@@ -915,7 +915,7 @@ class ServiceObject
     Rails.logger.info "validating proposal #{@bc_name}"
 
     errors = validator.validate(proposal)
-    @validation_errors = errors.map {|e| e.message}
+    @validation_errors = errors.map { |e| e.message }
     handle_validation_errors
   end
 
@@ -1011,7 +1011,7 @@ class ServiceObject
 
   def violates_cluster_constraint?(elements, role)
     if role_constraints[role] && !role_constraints[role]["cluster"]
-      clusters = elements[role].select {|e| is_cluster? e}
+      clusters = elements[role].select { |e| is_cluster? e }
       unless clusters.empty?
         return true
       end
@@ -1049,12 +1049,12 @@ class ServiceObject
       end
 
       if violates_platform_constraint?(elements, role)
-        platforms = role_constraints[role]["platform"].map {|k, v| [k, v].join(' ')}.join(', ')
+        platforms = role_constraints[role]["platform"].map { |k, v| [k, v].join(" ") }.join(", ")
         validation_error("Role #{role} can be used only for #{platforms} platform(s).")
       end
 
       if violates_exclude_platform_constraint?(elements, role)
-        platforms = role_constraints[role]["exclude_platform"].map {|k, v| [k, v].join(' ')}.join(', ')
+        platforms = role_constraints[role]["exclude_platform"].map { |k, v| [k, v].join(" ") }.join(", ")
         validation_error("Role #{role} can't be used for #{platforms} platform(s).")
       end
 
@@ -1115,7 +1115,7 @@ class ServiceObject
 
     begin
       prop.properties = proposal
-      save_proposal!(prop, :validate_after_save => validate_after_save)
+      save_proposal!(prop, validate_after_save: validate_after_save)
       Rails.logger.info "saved proposal"
       [200, {}]
     rescue Net::HTTPServerException => e
@@ -1188,7 +1188,6 @@ class ServiceObject
     # Initialize variables used in ensure at the end of the method
     chef_daemon_nodes = []
 
-
     # Query for this role
     old_role = RoleObject.find_role_by_name(role.name)
 
@@ -1215,7 +1214,7 @@ class ServiceObject
         message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
         update_proposal_status(inst, "failed", message)
         process_queue unless in_queue
-        return [ 405, message ]
+        return [405, message]
       end
     end
     new_elements = expanded_new_elements
@@ -1328,7 +1327,7 @@ class ServiceObject
             # An old node that is not in the new deployment, drop it
             if new_nodes.nil? or !new_nodes.include?(node_name)
               @logger.debug "remove node #{node_name}"
-              pending_node_actions[node_name] = { :remove => [], :add => [] } if pending_node_actions[node_name].nil?
+              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?
 
               pending_node_actions[node_name][:remove] << role_name
 
@@ -1369,7 +1368,7 @@ class ServiceObject
             # A new node that we did not know before
             if old_nodes.nil? or !old_nodes.include?(node_name)
               @logger.debug "add node #{node_name}"
-              pending_node_actions[node_name] = { :remove => [], :add => [] } if pending_node_actions[node_name].nil?
+              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?
               pending_node_actions[node_name][:add] << role_name
             end
             nodes_in_batch << node_name unless nodes_in_batch.include?(node_name)
@@ -1463,7 +1462,7 @@ class ServiceObject
       update_proposal_status(inst, "failed", message)
       restore_to_ready(all_nodes)
       process_queue unless in_queue
-      return [ 405, message ]
+      return [405, message]
     end
 
     # Each batch is a list of nodes that can be done in parallel.
@@ -1528,7 +1527,7 @@ class ServiceObject
             update_proposal_status(inst, "failed", message)
             restore_to_ready(all_nodes)
             process_queue unless in_queue
-            return [ 405, message ]
+            return [405, message]
           end
         end
       end
@@ -1563,7 +1562,7 @@ class ServiceObject
             update_proposal_status(inst, "failed", message)
             restore_to_ready(all_nodes)
             process_queue unless in_queue
-            return [ 405, message ]
+            return [405, message]
           end
         end
       end
@@ -1581,7 +1580,7 @@ class ServiceObject
       update_proposal_status(inst, "failed", message)
       restore_to_ready(all_nodes)
       process_queue unless in_queue
-      return [ 405, message ]
+      return [405, message]
     end
 
     update_proposal_status(inst, "success", "")
@@ -1705,7 +1704,7 @@ class ServiceObject
       ssh_cmd = ssh.dup << command
 
       # check if there are currently other chef-client runs on the node
-      wait_for_chef_clients(node, :logger => false)
+      wait_for_chef_clients(node, logger: false)
       # check if the node is currently rebooting
       wait_for_reboot(node)
 
@@ -1732,7 +1731,7 @@ class ServiceObject
 
     # wait for chef clients on all nodes
     wait_nodes.each do |node_name|
-      wait_for_chef_clients(node_name, :logger => true)
+      wait_for_chef_clients(node_name, logger: true)
     end if action == :stop
   end
 
@@ -1740,7 +1739,7 @@ class ServiceObject
 
   def wait_for_chef_clients(node_name, options = {})
     options = if options.fetch(:logger)
-      {:logger => @logger}
+      {logger: @logger}
     else
       {}
     end

@@ -16,7 +16,6 @@
 #
 
 class NagiosController < BarclampController
-
   protected
 
   def initialize_service

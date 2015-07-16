@@ -14,10 +14,8 @@
 # limitations under the License.
 #
 
-
 include_recipe "ganglia::client"
 include_recipe "apache2"
-
 
 case node[:platform]
 when "ubuntu","debian"
@@ -40,7 +38,7 @@ package ganglia_web_pkg_name
 # Begin recipe transactions
 Chef::Log.debug("BEGIN ganglia-server")
 
-if ubuntu_os 
+if ubuntu_os
   link "/etc/apache2/conf.d/ganglia.conf" do
     to "/etc/ganglia-webfrontend/apache.conf"
     not_if "test -L /etc/apache2/conf.d/ganglia.conf"
@@ -48,22 +46,22 @@ if ubuntu_os
   end
 else
   template "/etc/httpd/conf.d/ganglia.conf" do
-    source "ganglia.conf.erb" 
+    source "ganglia.conf.erb"
     notifies :reload, "service[apache2]"
   end
 end
 
 template gmetad_config_file do
-  source "gmetad.conf.erb" 
+  source "gmetad.conf.erb"
   notifies :restart, "service[gmetad]"
 end
 
 service "gmetad" do
   service_name gmetad_svc_name
-  supports :restart => true
+  supports restart: true
   running true
   enabled true
-  action [ :enable, :start ]
+  action [:enable, :start]
 end
 
 # End of recipe transactions

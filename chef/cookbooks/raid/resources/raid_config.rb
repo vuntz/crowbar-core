@@ -18,13 +18,13 @@
   Sample use:
 
   raid_config "lsi_ircu" do
-    config( 
+    config(
        { "vol-raid1" => {:raid_level => :RAID1}, ## must use exactly 2 disks
          "vol-raid0" => {:raid_level => :RAID0, :disks = 3 },
          "default" =>  {:raid_level => :JBOD }
      action [:apply, :report]
   end
- 
+
 =end
 
 ## what to do:
@@ -35,7 +35,7 @@ actions :apply, :report, :set_boot
 ## what raind configuration to apply - hash, see above
 attribute :config
 ## should really verbose output be produced - true/false
-attribute :debug_flag 
+attribute :debug_flag
 ## where to log problems encountered - string
 attribute :problem_file
 ## Boot parameter that indicates if nic should be first

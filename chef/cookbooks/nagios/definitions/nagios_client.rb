@@ -17,8 +17,7 @@
 #
 # Based on nagios_conf, but applies to client side NRPE configuration
 #
-define :nrpe_conf, :variables => {}  do
-
+define :nrpe_conf, variables: {}  do
   template "/etc/nagios/nrpe.d/#{params[:name]}.cfg" do
       source "#{params[:name]}.cfg.erb"
       mode "0644"
@@ -26,6 +25,6 @@ define :nrpe_conf, :variables => {}  do
       owner node[:nagios][:user]
       variables params[:variables]
       notifies :restart, "service[nagios-nrpe-server]"
-      backup 0 
-    end 
+      backup 0
+    end
 end

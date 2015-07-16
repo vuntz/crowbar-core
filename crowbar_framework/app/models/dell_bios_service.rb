@@ -14,7 +14,6 @@
 #
 
 class DellBiosService < ServiceObject
-
   def initialize(thelogger)
     @bc_name = "dell_bios"
     @logger = thelogger
@@ -47,9 +46,8 @@ class DellBiosService < ServiceObject
     role = RoleObject.find_role_by_name "dell_bios-config-#{inst}"
     result = add_role_to_instance_and_node("dell_bios", inst, name, db, role, new_role )
     @logger.debug("DellBios transition: leaving from installed state for #{name} for #{state}")
-    a = [200, NodeObject.find_node_by_name(name).to_hash ] if result
+    a = [200, NodeObject.find_node_by_name(name).to_hash] if result
     a = [400, "Failed to add role to node"] unless result
     return a
   end
-
 end

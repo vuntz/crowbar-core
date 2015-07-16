@@ -14,7 +14,7 @@
 #
 
 #
-# This section is used to setup a test pass of 
+# This section is used to setup a test pass of
 # the resource without needing to call through
 # chef.
 #
@@ -24,17 +24,17 @@ $in_chef=true
 
 if !$in_chef
   class TestResource
-    def debug_flag 
+    def debug_flag
       true
     end
-    def problem_file 
+    def problem_file
       "profile.out"
     end
   end
   @new_resource = TestResource.new
-  
+
   class MyHash < Hash
-    def save 
+    def save
     end
   end
 
@@ -72,14 +72,12 @@ if !$in_chef
   require "../libraries/xml_util.rb"
   require "raid_config.rb"
 
-  
-
   #
   # Used to talk to WSMAN.
   #
-  host = '192.168.124.320'
-  user = 'root'
-  password = 'cr0wBar!'
+  host = "192.168.124.320"
+  user = "root"
+  password = "cr0wBar!"
   port = 443
   node[:ipmi] = Hash.new
   node[:ipmi][:bmc_user] = user
@@ -119,26 +117,26 @@ if !$in_chef
 
   a1_controller_no_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   a1_controller_no_disks << c
 
   a2_controller_no_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   a2_controller_no_disks << c
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID10, :RAID50 ]
+  c.supported_raid_levels = [:RAID10, :RAID50]
   c.product_name = "John Prime"
   a2_controller_no_disks << c
 
   a1_controller_3_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   count = 0
-  3.times do 
+  3.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -150,10 +148,10 @@ if !$in_chef
 
   a1_controller_5_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID10, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID10, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   count = 0
-  5.times do 
+  5.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -165,10 +163,10 @@ if !$in_chef
 
   a2_controller_3_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   count = 0
-  3.times do 
+  3.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -178,10 +176,10 @@ if !$in_chef
   end
   a2_controller_3_disks << c
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID10, :RAID50, :JBOD, :RAIDK ]
+  c.supported_raid_levels = [:RAID10, :RAID50, :JBOD, :RAIDK]
   c.product_name = "Fred Prime"
   count = 0
-  3.times do 
+  3.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -193,10 +191,10 @@ if !$in_chef
 
   a2_controller_5_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "Fred Prime"
   count = 0
-  5.times do 
+  5.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -206,10 +204,10 @@ if !$in_chef
   end
   a2_controller_5_disks << c
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID10, :RAID50, :JBOD, :RAIDK ]
+  c.supported_raid_levels = [:RAID10, :RAID50, :JBOD, :RAIDK]
   c.product_name = "Fred Prime"
   count = 0
-  5.times do 
+  5.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -221,10 +219,10 @@ if !$in_chef
 
   a2_controller_7_disks = []
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID1, :RAID1E, :RAID5, :JBOD ]
+  c.supported_raid_levels = [:RAID1, :RAID1E, :RAID5, :JBOD]
   c.product_name = "John Prime"
   count = 0
-  7.times do 
+  7.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -234,10 +232,10 @@ if !$in_chef
   end
   a2_controller_7_disks << c
   c = Crowbar::RAID::Controller.new
-  c.supported_raid_levels = [ :RAID10, :RAID50, :JBOD, :RAIDK ]
+  c.supported_raid_levels = [:RAID10, :RAID50, :JBOD, :RAIDK]
   c.product_name = "Fred Prime"
   count = 0
-  7.times do 
+  7.times do
     d = Crowbar::RAID::RaidDisk.new
     d.controller = c
     d.enclosure = 0
@@ -249,7 +247,7 @@ if !$in_chef
 
   config_1_volume_no_cont = {
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "stripe_size" => 2048, "max_size" => 12 },
+      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "stripe_size" => 2048, "max_size" => 12 }
     }
   }
 
@@ -259,7 +257,7 @@ if !$in_chef
     assert_equal(errs.length, 1, "Incorrect errors")
     assert_equal(errs[0], "Volume 0 doesn't match any controller", "Missing error")
   end
- 
+
   test "2" do
     vols, errs = build_volumes(config_1_volume_no_cont, a2_controller_no_disks)
     assert_equal(vols.length, 0, "volumes created")
@@ -295,7 +293,7 @@ if !$in_chef
 
   config_1_volume_no_cont2 = {
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntrl1" },
+      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntrl1" }
     }
   }
 
@@ -311,7 +309,7 @@ if !$in_chef
     assert_equal(vols.length, 0, "volumes created")
     assert_equal(errs.length, 1, "Incorrect errors")
     assert_equal(errs[0], "Volume 0 doesn't match any controller", "Missing error")
-  end 
+  end
 
   test "7" do
     vols, errs = build_volumes(config_1_volume_no_cont2, a1_controller_3_disks)
@@ -325,7 +323,7 @@ if !$in_chef
     assert_equal(vols[1].members.length, 1, "Incorrect disks")
     assert_equal(vols[1].raid_level, :JBOD, "Incorrect raid_level")
     assert_equal(vols[1].controller, a1_controller_3_disks[0], "Incorrect controller")
-  end 
+  end
 
   test "8" do
     vols, errs = build_volumes(config_1_volume_no_cont2, a1_controller_5_disks)
@@ -341,10 +339,10 @@ if !$in_chef
 
   config_1_volume_cont1 = {
     "controllers"=> {
-      "cntr1"=> { },
+      "cntr1"=> { }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -388,10 +386,10 @@ if !$in_chef
 
   config_1_volume_cont2 = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAID1" ] },
+      "cntr1"=> { "raid_level_filter"=> ["RAID1"] }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -432,13 +430,13 @@ if !$in_chef
     assert_equal(vols[1].raid_level, :JBOD, "Incorrect raid_level")
     assert_equal(vols[1].controller, a1_controller_5_disks[0], "Incorrect controller")
   end
-  
+
   config_1_volume_cont2r = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAID1" ] },
+      "cntr1"=> { "raid_level_filter"=> ["RAID1"] }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "3", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAID1" , "disk_count"=> "3", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -479,13 +477,13 @@ if !$in_chef
     assert_equal(vols[1].raid_level, :JBOD, "Incorrect raid_level")
     assert_equal(vols[1].controller, a1_controller_5_disks[0], "Incorrect controller")
   end
-  
+
   config_1_volume_cont2e = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAID1E" ] },
+      "cntr1"=> { "raid_level_filter"=> ["RAID1E"] }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1E" , "disk_count"=> "3", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAID1E" , "disk_count"=> "3", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -522,13 +520,13 @@ if !$in_chef
     assert_equal(vols[1].raid_level, :JBOD, "Incorrect raid_level")
     assert_equal(vols[1].controller, a1_controller_5_disks[0], "Incorrect controller")
   end
-  
+
   config_1_volume_cont2er = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAID1E" ] },
+      "cntr1"=> { "raid_level_filter"=> ["RAID1E"] }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAID1E" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAID1E" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -564,10 +562,10 @@ if !$in_chef
 
   config_1_volume_cont3 = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAIDK" ] },
+      "cntr1"=> { "raid_level_filter"=> ["RAIDK"] }
     },
     "volumes"=> {
-      "0" => { "raid_level"=> "RAIDK" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" },
+      "0" => { "raid_level"=> "RAIDK" , "disk_count"=> "remaining", "order"=> 1, "controller"=> "cntr1" }
     }
   }
 
@@ -673,13 +671,13 @@ if !$in_chef
 
   config5 = {
     "controllers"=> {
-      "cntr1"=> { "device" => [ "Sleepy", "Dopey" ] }
+      "cntr1"=> { "device" => ["Sleepy", "Dopey"] }
     },
     "volumes"=> {
       "1" => { "raid_level"=> "RAID1E" , "disk_count"=> "remaining", "order"=> 2, "controller"=> "cntr1" }
     }
   }
-  
+
   test "26" do
     vols, errs = build_volumes(config5, a2_controller_7_disks)
     assert_equal(vols.length, 0, "volumes created")
@@ -690,13 +688,13 @@ if !$in_chef
 
   config5 = {
     "controllers"=> {
-      "cntr1"=> { "device" => [ "John Prime", "Dopey" ] }
+      "cntr1"=> { "device" => ["John Prime", "Dopey"] }
     },
     "volumes"=> {
       "1" => { "raid_level"=> "RAID1E" , "disk_count"=> "remaining", "order"=> 2, "controller"=> "cntr1" }
     }
   }
-  
+
   test "27" do
     vols, errs = build_volumes(config5, a2_controller_7_disks)
     assert_equal(vols.length, 2, "volumes created")
@@ -711,13 +709,13 @@ if !$in_chef
 
   config5 = {
     "controllers"=> {
-      "cntr1"=> { "device" => [ "Fred Prime", "Dopey" ] }
+      "cntr1"=> { "device" => ["Fred Prime", "Dopey"] }
     },
     "volumes"=> {
       "1" => { "raid_level"=> "RAIDK" , "disk_count"=> "remaining", "order"=> 2, "controller"=> "cntr1" }
     }
   }
-  
+
   test "28" do
     vols, errs = build_volumes(config5, a2_controller_7_disks)
     assert_equal(vols.length, 2, "volumes created")
@@ -761,14 +759,13 @@ if !$in_chef
     }
   }
 
-  jbod_config = { 
+  jbod_config = {
     "volumes" => {
       "default" => { "raid_level" => "JBOD", "disk_count" => "remaining", "order"=> 3 }
     }
   }
 
 end
-
 
 if __FILE__ == $0
   $in_chef=true
@@ -786,7 +783,7 @@ if __FILE__ == $0
 The expressions below are some useful debugging tools when using IRB
 
 -Given a bunch of volumes, display the volume-id/name (disk.enc:d.slot)-disk.vol_id
-volumes.map { | x| s = x.members.map {|d| "#{d.enclosure}:#{d.slot}-#{d.vol_id}" }.sort.join(",");" #{x.raid_level} #{x.vol_id}/#{x.vol_name} :#{s}" } 
+volumes.map { | x| s = x.members.map {|d| "#{d.enclosure}:#{d.slot}-#{d.vol_id}" }.sort.join(",");" #{x.raid_level} #{x.vol_id}/#{x.vol_name} :#{s}" }
 
 -Given a bunch of disks, dump some info
 disks.map {|d| "#{d.enclosure}:#{d.slot}-#{d.vol_id}" }
@@ -800,7 +797,6 @@ volumes, errors = build_volumes(config, controllers)
 
 - compute the differences between the desired and existing state.
 v, rm_old,rm_new = get_volume_differences(volumes, controllers)
-  
 
 =end
 
@@ -808,8 +804,8 @@ end
 
   config1 = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAID5" ] },
-      "cntr2"=> { "raid_level_filter"=> [ "RAID5" ] }
+      "cntr1"=> { "raid_level_filter"=> ["RAID5"] },
+      "cntr2"=> { "raid_level_filter"=> ["RAID5"] }
     },
     "volumes"=> {
       "0" => { "raid_level"=> "RAID5" , "disk_count"=> "6", "order"=> 1, "controller"=> "cntr1" },
@@ -821,8 +817,8 @@ end
 
   config1b = {
     "controllers"=> {
-      "cntr1"=> { "raid_level_filter"=> [ "RAIDK" ] },
-      "cntr2"=> { "raid_level_filter"=> [ "RAIDK" ] }
+      "cntr1"=> { "raid_level_filter"=> ["RAIDK"] },
+      "cntr2"=> { "raid_level_filter"=> ["RAIDK"] }
     },
     "volumes"=> {
       "0" => { "raid_level"=> "RAID5" , "disk_count"=> "6", "order"=> 1, "controller"=> "cntr1" },

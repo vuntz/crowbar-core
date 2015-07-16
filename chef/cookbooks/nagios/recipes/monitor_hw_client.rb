@@ -29,12 +29,11 @@ if node[:platform] != "windows" and node["roles"].include?("nagios-client")
     when "redhat","centos"
       package "perl-suidperl"
     when "ubuntu","debian"
-      unless [ "12.04" ].include? node[:platform_version]
+      unless ["12.04"].include? node[:platform_version]
         package "perl-suid"
       end
     end
   end
-
 
   if raid_type
     # ensure raid utilities are installed, if we have raid
@@ -61,8 +60,8 @@ if node[:platform] != "windows" and node["roles"].include?("nagios-client")
 
   nrpe_conf "monitor_hw_nrpe" do
       variables( {
-          :plugin_dir => nagios_plugins,
-          :ipmi => ipmi_avail,
-          :raid => raid_type })
+          plugin_dir: nagios_plugins,
+          ipmi: ipmi_avail,
+          raid: raid_type })
   end
 end

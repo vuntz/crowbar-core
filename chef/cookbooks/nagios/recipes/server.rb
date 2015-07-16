@@ -53,33 +53,33 @@ end
 nodes.delete_if { |n| n["state"] == "delete" }
 
 # Get a list of system administration users
-sysadmins = search(:users, 'groups:sysadmin')
+sysadmins = search(:users, "groups:sysadmin")
 members = Array.new
 sysadmins.each do |s|
-  Chef::Log.debug("Add system admin user [" +  s['id'] + "]")
-  members << s['id']
+  Chef::Log.debug("Add system admin user [" +  s["id"] + "]")
+  members << s["id"]
 end
 
 # Make sure that the nodes have a field "ipaddress" that is the admin address
 hosts = {}
 platforms = []
-nodes.each do |n| 
+nodes.each do |n|
   ip = Nagios::Evaluator.get_value_by_type(n, :admin_ip_eval)
   hosts[ip] = n unless ip.nil?
   platforms << n[:platform] unless platforms.include?(n[:platform])
-end 
-# Build a hash of service name to the server fulfilling that role (NOT a list ) 
+end
+# Build a hash of service name to the server fulfilling that role (NOT a list )
 role_list = Array.new
 service_hosts = Hash.new
 search(:role, "*:*") do |r|
   role_list << r.name
   search(:node, "roles:#{r.name} #{env_filter}") do |n|
     next if n["state"] == "delete"
-    service_hosts[r.name] = n['hostname']
+    service_hosts[r.name] = n["hostname"]
   end
 end
 
-# Get the public domain name 
+# Get the public domain name
 if node[:public_domain]
   public_domain = node[:public_domain]
 else
@@ -117,7 +117,7 @@ end
 
 service "nagios3" do
   service_name nagios_svc_name
-  supports :status => true, :restart => true, :reload => true
+  supports status: true, restart: true, reload: true
   action :nothing
 end
 
@@ -167,7 +167,6 @@ execute "archive default nagios object definitions" do
   not_if { Dir.glob(node[:nagios][:dir] + "/#{node[:nagios][:config_subdir]}/*_nagios*.cfg").empty? }
 end
 
-
 file "#{node[:nagios][:dir]}/#{node[:nagios][:config_subdir]}/internet.cfg" do
   action :delete
 end
@@ -188,7 +187,7 @@ else
     group node[:apache][:group]
     mode 0640
     variables(
-      :sysadmins => sysadmins
+      sysadmins: sysadmins
     )
   end
 end
@@ -208,9 +207,9 @@ end
 template nagios_apache_conf do
   source "apache2.conf.erb"
   mode 0644
-  variables :public_domain => public_domain
+  variables public_domain: public_domain
   if ::File.exists?(nagios_apache_conf_reload)
-    notifies :reload, resources(:service => "apache2")
+    notifies :reload, resources(service: "apache2")
   end
 end
 
@@ -227,7 +226,7 @@ end
 #
 nova_commands = %w{ check_nova_manage check_nova_compute check_nova_scheduler }
 
-swift_svcs = %w{swift-object swift-object-auditor swift-object-replicator swift-object-updater} 
+swift_svcs = %w{swift-object swift-object-auditor swift-object-replicator swift-object-updater}
 swift_svcs =swift_svcs + %w{swift-container swift-container-auditor swift-container-replicator swift-container-updater}
 swift_svcs =swift_svcs + %w{swift-account swift-account-reaper swift-account-auditor swift-account-replicator}
 swift_svcs =swift_svcs + ["swift-proxy"]
@@ -239,24 +238,24 @@ ports=%w{keystone-admin keystone-service glance-api glance-registry swift-object
 
 %w{ commands templates timeperiods}.each do |conf|
   nagios_conf conf do
-    variables :nova_commands => nova_commands, :svcs => swift_svcs + glance_svcs + keystone_svcs, :ports => ports
+    variables nova_commands: nova_commands, svcs: swift_svcs + glance_svcs + keystone_svcs, ports: ports
   end
 end
 
 nagios_conf "services" do
-  variables :service_hosts => service_hosts, :platforms => platforms
+  variables service_hosts: service_hosts, platforms: platforms
 end
 
 nagios_conf "contacts" do
-  variables :admins => sysadmins, :members => members
+  variables admins: sysadmins, members: members
 end
 
 nagios_conf "hostgroups" do
-  variables :roles => role_list, :platforms => platforms
+  variables roles: role_list, platforms: platforms
 end
 
 nagios_conf "hosts" do
-  variables :hosts => hosts, :platforms => platforms
+  variables hosts: hosts, platforms: platforms
 end
 
 if do_chk_config

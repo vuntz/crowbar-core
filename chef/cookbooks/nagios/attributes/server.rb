@@ -35,7 +35,7 @@ set[:nagios][:log_dir]   = "/var/log/nagios3"
 set[:nagios][:log_dir]   = "/var/log/nagios" if redhat_platform? or suse_platform?
 set[:nagios][:cache_dir] = "/var/cache/nagios3"
 set[:nagios][:cache_dir] = "/var/log/nagios" if redhat_platform? or suse_platform?
-set[:nagios][:state_dir] = "/var/lib/nagios3" 
+set[:nagios][:state_dir] = "/var/lib/nagios3"
 set[:nagios][:state_dir] = "/var/log/nagios" if redhat_platform?
 set[:nagios][:state_dir] = "/var/lib/nagios" if suse_platform?
 set[:nagios][:docroot]   = "/usr/share/nagios3/htdocs"
@@ -60,14 +60,13 @@ set[:nagios][:stylesheets] = "/etc/nagios3"
 set[:nagios][:stylesheets] = "/usr/share/nagios/html" if redhat_platform?
 set[:nagios][:stylesheets] = "/usr/share/nagios/stylesheets" if suse_platform?
 
-
 default[:nagios][:notifications_enabled]   = 0
 default[:nagios][:check_external_commands] = true
 default[:nagios][:default_contact_groups]  = %w(admins)
 default[:nagios][:sysadmin_email]          = "root@localhost"
 default[:nagios][:sysadmin_sms_email]      = "root@localhost"
 default[:nagios][:server_auth_method]      = "openid"
-default[:nagios][:monitor_ipmi]            = true 
+default[:nagios][:monitor_ipmi]            = true
 default[:nagios][:monitor_raid]            = false
 
 # This setting is effectively sets the minimum interval (in seconds) nagios can handle.

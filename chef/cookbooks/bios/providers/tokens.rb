@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-action :dump do 
+action :dump do
   pgm = @new_resource.pgm
   dir = @new_resource.pgm_dir
   s = %x{ cd #{dir} ; #{pgm} setting show }

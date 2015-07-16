@@ -18,7 +18,7 @@
 #
 # Actions from resource
 #
-action :report do  
+action :report do
   # Implicitly handled by load_current_resource
 end
 
@@ -42,9 +42,9 @@ end
 def load_current_resource
   log "load_current_resource start..............................."
   @drivers, @controllers = enumerate_topology
-  if @controllers.nil? or 
-     @drivers.nil? or 
-     @controllers.empty? or 
+  if @controllers.nil? or
+     @drivers.nil? or
+     @controllers.empty? or
      @drivers.empty?
     @failed = true
   else
@@ -67,10 +67,9 @@ def report_problem(msg)
 end
 
 def log_(msg)
-  Chef::Log.info(msg) 
+  Chef::Log.info(msg)
   true
 end
-
 
 def log_action(action)
   node["crowbar_wall"] = {} unless node["crowbar_wall"]
@@ -104,13 +103,13 @@ def do_report(debug_flag)
   @controllers.each do |c|
     node["crowbar_wall"]["raid"]["controllers"][c.controller_id] = c.to_hash
     s << "  Controller #{c.controller_id}:\n"
-    s << "   disks #{c.disks.length}: #{c.disks.map {|x| x.to_s}.join(", ")}\n"
-    s << "   volumes #{c.volumes.length}: #{c.volumes.map {|x| x.to_s}.join(", ")}\n"
+    s << "   disks #{c.disks.length}: #{c.disks.map { |x| x.to_s }.join(", ")}\n"
+    s << "   volumes #{c.volumes.length}: #{c.volumes.map { |x| x.to_s }.join(", ")}\n"
   end
-  
+
   log s
 
-  node.save    
+  node.save
 rescue Exception => e
   log("do_report exception: #{e.message} #{e.backtrace}")
   report_problem($!)  ## $! is the global exception variable
@@ -122,7 +121,7 @@ end
 # Return a [ drivers, controllers ]
 #
 def enumerate_topology
-  driver_sets = [[Crowbar::RAID::WsManCli],[Crowbar::RAID::LSI_MegaCli,Crowbar::RAID::LSI_sasIrcu]]  
+  driver_sets = [[Crowbar::RAID::WsManCli],[Crowbar::RAID::LSI_MegaCli,Crowbar::RAID::LSI_sasIrcu]]
   drivers = []
   controllers = []
 
@@ -130,7 +129,7 @@ def enumerate_topology
     log("will try set: #{set.inspect}")
 
     set.each do |c|
-      log("trying #{c}") {level :debug}
+      log("trying #{c}") { level :debug }
       puts "Trying new driver #{c}"
       ## try to instantiate and test the controller class, but catch errors.
       begin
@@ -150,7 +149,7 @@ def enumerate_topology
     break unless controllers.empty?
   end
   controllers = controllers.flatten
-  log("no suported RAID controller found on this system"){level :error} if controllers.empty?
+  log("no suported RAID controller found on this system"){ level :error } if controllers.empty?
   [drivers, controllers]
 end
 
@@ -158,16 +157,16 @@ end
 # raid info.
 #
 RAID_INFO = {
-    :RAID0  => { :min_count => 2, :max_count => 10000, :odd => false, :even => false },
-    :RAID00 => { :min_count => 4, :max_count => 10000, :odd => false, :even => true },
-    :RAID1  => { :min_count => 2, :max_count => 2,     :odd => false, :even => true },
-    :RAID10 => { :min_count => 4, :max_count => 10000, :odd => false, :even => true },
-    :RAID1E => { :min_count => 3, :max_count => 10000, :odd => true,  :even => false },
-    :RAID5  => { :min_count => 3, :max_count => 10000, :odd => false, :even => false },
-    :RAID50 => { :min_count => 6, :max_count => 10000, :odd => false, :even => true },
-    :RAID6  => { :min_count => 4, :max_count => 10000, :odd => false, :even => false },
-    :RAID60 => { :min_count => 8, :max_count => 10000, :odd => false, :even => true },
-    :JBOD   => { :min_count => 1, :max_count => 10000, :odd => false, :even => false }
+    RAID0: { min_count: 2, max_count: 10000, odd: false, even: false },
+    RAID00: { min_count: 4, max_count: 10000, odd: false, even: true },
+    RAID1: { min_count: 2, max_count: 2,     odd: false, even: true },
+    RAID10: { min_count: 4, max_count: 10000, odd: false, even: true },
+    RAID1E: { min_count: 3, max_count: 10000, odd: true,  even: false },
+    RAID5: { min_count: 3, max_count: 10000, odd: false, even: false },
+    RAID50: { min_count: 6, max_count: 10000, odd: false, even: true },
+    RAID6: { min_count: 4, max_count: 10000, odd: false, even: false },
+    RAID60: { min_count: 8, max_count: 10000, odd: false, even: true },
+    JBOD: { min_count: 1, max_count: 10000, odd: false, even: false }
 }
 
 def get_disk_count_min(rl)
@@ -202,7 +201,7 @@ def build_volumes(config, controllers)
   volumes = []
   errors = []
 
-  return [ [], [] ] unless config["volumes"]
+  return [[], []] unless config["volumes"]
 
   # How many controllers are explicitly declared by volume
   cont_names = []
@@ -211,7 +210,7 @@ def build_volumes(config, controllers)
   end
   cont_names.uniq!
 
-  # Process controllers to get option lists.  
+  # Process controllers to get option lists.
   # Given the names, find the best matches.
   cont_options = {}
   cont_names.each do |c_name|
@@ -233,14 +232,14 @@ def build_volumes(config, controllers)
           new_list = rc.supported_raid_levels & list
           next if new_list.empty?
         end
- 
+
         cont_options[c_name] << rc
       end
     else
       # No criteria, take them all
       cont_options[c_name] = controllers.dup
     end
-  end 
+  end
   cont_options.each do |k,l|
     next if l.length > 0
     errors << "Controller #{k} has no options"
@@ -262,7 +261,7 @@ def build_volumes(config, controllers)
 
     c_set = unused_controllers
     c_set = cont_options[hash["controller"]] if hash["controller"]
-    
+
     if c_set.nil? or c_set.empty?
       errors << "Volume #{name} doesn't have viable controller options"
       next
@@ -290,7 +289,7 @@ def build_volumes(config, controllers)
     my_c = nil
     c_set.each do |c|
       next unless c.supported_raid_levels.include? rl
-      if disk_min > c.avail_disks.length 
+      if disk_min > c.avail_disks.length
         # This is the hack to downgrade a RAID10 to a RAID1
         # for our C6100s
         if rl == :RAID10 and c.avail_disks.length > 1
@@ -322,7 +321,7 @@ def build_volumes(config, controllers)
       cont_options.each do |k,h|
         h.delete(my_c)
       end
-      cont_options[hash["controller"]] = [ my_c ]
+      cont_options[hash["controller"]] = [my_c]
     end
 
     #
@@ -332,15 +331,15 @@ def build_volumes(config, controllers)
     v.controller = my_c
     v.raid_level = rl
     v.vol_name = name
-    if hash["max_size"] 
+    if hash["max_size"]
       v.size = hash["max_size"]
     else
       v.size = "MAX"
     end
-    if hash["stripe_size"] 
+    if hash["stripe_size"]
       v.stripe_size = hash["stripe_size"]
     end
-    
+
     disk_count = my_c.avail_disks.length if disk_count == "remaining"
     if should_be_even? rl and disk_count % 2 == 1
       disk_count = disk_count - 1
@@ -359,11 +358,11 @@ def build_volumes(config, controllers)
     disk_count.times do
       v.members << my_c.avail_disks.shift
     end
-    
+
     volumes << v
   end
 
-  return [ [], errors ]  unless errors.empty?
+  return [[], errors]  unless errors.empty?
 
   #
   # Once all volumes are constructed, build JBOD volumes for the remaining drives.
@@ -375,7 +374,7 @@ def build_volumes(config, controllers)
     cc = v.controller
     disks[cc] = disks[cc] - v.members
   end
-  
+
   disks.keys.each do |k|
     next if disks[k].length == 0
     rv = Crowbar::RAID::Volume.new
@@ -385,7 +384,7 @@ def build_volumes(config, controllers)
     volumes << rv
   end
 
-  [ volumes, [] ]
+  [volumes, []]
 end
 
 #
@@ -397,21 +396,21 @@ def compare_volume(old, new)
   return 1 if old.nil?
 
   reason = "no diff"
-  begin 
+  begin
     ret = 0
     if old.controller != new.controller
-      reason = "different controller" ;ret=1 ; break  
+      reason = "different controller" ;ret=1 ; break
     end
     if old.members.length != new.members.length
-      reason = "different member's count #{old.members.length}/#{new.members.length}" ; ret=1 ; break 
+      reason = "different member's count #{old.members.length}/#{new.members.length}" ; ret=1 ; break
     end
     if  old.raid_level != new.raid_level
-      reason = "different level" ; ret= 1 ; break 
+      reason = "different level" ; ret= 1 ; break
     end
-  
+
     ostr = old.members.map { |d| "#{d.enclosure}:#{d.slot}" }.sort.join(",")
     nstr = new.members.map { |d| "#{d.enclosure}:#{d.slot}" }.sort.join(",")
-    reason = "different members" && ret = ostr <=> nstr 
+    reason = "different members" && ret = ostr <=> nstr
   end while false
   if ret != 0
     log("volume #{old.vol_name} differ because of #{reason}")
@@ -424,8 +423,8 @@ end
 def get_volume_differences(new_volumes, controllers)
   old_volumes = controllers.map { |x| x.volumes }
   old_volumes.flatten!
-  
-  # 
+
+  #
   # Remove matching volumes
   #
   rm_old = []
@@ -467,34 +466,34 @@ def compute_delta(new_volumes, controllers)
   if rm_old.length == 0
     ccs = old_volumes.map { |v| v.controller }
     ccs.uniq.each do |c|
-      actions << { :action => :clear_config, :controller => c }
+      actions << { action: :clear_config, controller: c }
     end
   else
     old_volumes.each do |v|
       next if rm_old.include? v
-      actions << { :action => :delete_vd, :controller => v.controller, :volume => v }
+      actions << { action: :delete_vd, controller: v.controller, volume: v }
     end
   end
 
   #
   # New volumes should be created!
-  # 
+  #
   touched = []
   new_volumes.each do |v|
     next if rm_new.include? v
     vol_data = {
-      :name => v.vol_name,
-      :type => v.raid_level,
-      :size => v.size,
-      :disks => v.members
+      name: v.vol_name,
+      type: v.raid_level,
+      size: v.size,
+      disks: v.members
     }
     vol_data[:stripe_size] = v.stripe_size if v.stripe_size
-    actions << { :action => :clear_foreign_config, :controller => v.controller } unless touched.include? v.controller.controller_id
-    actions << { :action => :create_vd, :controller => v.controller, :volume => vol_data }
+    actions << { action: :clear_foreign_config, controller: v.controller } unless touched.include? v.controller.controller_id
+    actions << { action: :create_vd, controller: v.controller, volume: vol_data }
     touched << v.controller.controller_id
   end
 
-  [ actions, errors ]
+  [actions, errors]
 end
 
 #
@@ -541,12 +540,11 @@ def do_actions(actions)
 
   ## Only way to get job id is to use the wsman driver..setup the job queue now
   if (jids and jids.length > 0)
-    wsman_driver.run_multiple_raid_jobs(jids) 
+    wsman_driver.run_multiple_raid_jobs(jids)
   end
 
   []
 end
-
 
 def apply_config(config, controllers)
   volumes, errors = build_volumes(config, controllers)
@@ -597,7 +595,7 @@ def do_set_boot(config, controllers, nic_first)
   controller = boot_vol.controller
   driver = controller.driver
   driver.set_boot(controller, boot_vol, nic_first)
-rescue 
+rescue
   report_problem($!)  ## $! is the global exception variable
 end
 

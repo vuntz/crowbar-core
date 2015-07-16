@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-maintainer       "Dell, Inc."
+maintainer "Dell, Inc."
 maintainer_email "crowbar@dell.com"
-license          "Apache 2.0"
-description      "Manipulates RAID controller configuration to match desired RAID volumes"
+license "Apache 2.0"
+description "Manipulates RAID controller configuration to match desired RAID volumes"
 long_description "Manipulates RAID controller configuration to match desired RAID volumes"
-version          "0.1"
-depends          "utils"
+version "0.1"
+depends "utils"
 

@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-require 'json'
-require 'chef/shell_out'
+require "json"
+require "chef/shell_out"
 
 def cnt_name(type)
   "bios_c_#{type}_attempts"
@@ -38,7 +38,7 @@ end
 
 def up_count(type)
   c_name = cnt_name(type)
-  c = node["crowbar_wall"]["track"][c_name] 
+  c = node["crowbar_wall"]["track"][c_name]
   node["crowbar_wall"]["track"][c_name] = c+1
   node.save
   return c+1
@@ -48,7 +48,7 @@ def can_try_again(type, max)
   count = get_count(type)
   Chef::Log.warn("Max allowed configure attempts : #{max}")
   try = (count < max)
-  Chef::Log.warn("Attempts to configure #{type} so far: #{count} will #{ try ? "" : "not"}try again")  
+  Chef::Log.warn("Attempts to configure #{type} so far: #{count} will #{ try ? "" : "not"}try again")
   return try
 end
 
@@ -57,13 +57,13 @@ end
 # Returns false if we need to try again or on failure.
 #
 def wsman_configure(product, attrs)
-  require 'wsman'
+  require "wsman"
   # Get bmc parameters
   ip = node["crowbar_wall"]["ipmi"]["address"]
   user = node["ipmi"]["bmc_user"] rescue "crowbar"
   password = node["ipmi"]["bmc_password"] rescue "crowbar"
 
-  opts = { :user => user, :password => password, :host => ip, :port => 443, :debug_time => false }
+  opts = { user: user, password: password, host: ip, port: 443, debug_time: false }
   wsman = Crowbar::WSMAN.new(opts)
 
   ## Seen issues on 11G where pending config jobs seem to be left behind...
@@ -93,7 +93,7 @@ def wsman_configure(product, attrs)
 
   # Do the attr updates
   wsman_attributes = Crowbar::BIOS::WSMANAttributes.new(wsman)
-  opts = { :node => node }
+  opts = { node: node }
   ret, reboot = wsman_attributes.update_attributes(attrs, opts)
   Chef::Log.info("WSMAN update attributes: #{ret} #{reboot}")
   report_problem(reboot) unless ret
@@ -101,7 +101,6 @@ def wsman_configure(product, attrs)
   %x{reboot && sleep 120} if ret and reboot
   return ret
 end
-
 
 ##
 # log to the problem file.

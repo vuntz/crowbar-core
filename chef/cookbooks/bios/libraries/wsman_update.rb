@@ -14,11 +14,11 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'xmlsimple'
-require 'yaml'
-require 'json'
-require 'wsman'
+require "rubygems"
+require "xmlsimple"
+require "yaml"
+require "json"
+require "wsman"
 
 BIOS_COMP_ID   = "159"
 IDRAC_11G_COMP = "20137"
@@ -32,9 +32,7 @@ LOOKUP_STRS    = {DRIVER_PACK_ID => "Driver Pack",
 
 class Crowbar
 class BIOS
-
 class WSMANUpdate
-
   attr_accessor :sysGen, :prevHash, :currHash, :jobArray
 
   def initialize(wsman)
@@ -61,14 +59,14 @@ class WSMANUpdate
   end
 
   # Example: Find iDRAC6
-  # list2 = find_software_inventory_items(list, 
+  # list2 = find_software_inventory_items(list,
   #           {"ElementName" => "iDRAC.*", "ComponentType" => "FRMW", "Status" => "Installed"})
   #
   def find_software_inventory_items(inventory, test = {})
     return inventory if test.size == 0
-    inventory.select do |x| 
+    inventory.select do |x|
       found = true
-      test.each { |k,v| 
+      test.each { |k,v|
         found = false unless x[k] =~ /#{v}/
       }
       found
@@ -104,7 +102,7 @@ class WSMANUpdate
 </p:InstallFromURI_INPUT>
 ]
     end
-  
+
     # Post the update request.
     soft_svc_uri = @wsman.find_base_instance_uri(SOFT_SVC_CLASS)
     output = @wsman.command("invoke -a InstallFromURI", soft_svc_uri, " -J /tmp/request.xml")
@@ -148,7 +146,7 @@ class WSMANUpdate
       end
       # If we completed, we are done.
       if status == "Completed"
-        return true, false 
+        return true, false
       end
       if status == "In Use"
         return true, true # Force a reboot
@@ -170,15 +168,15 @@ class WSMANUpdate
         data["devices"].each do |device|
           next unless device["vendorID"]
           next unless device["deviceID"]
-  
+
           unless device["subDeviceID"] and device["subDeviceID"] == "" and
                  device["subVendorID"] and device["subVendorID"] == ""
             sub_truth = c["SubDeviceID"].downcase == device["subDeviceID"].downcase and
-                        c["SubVendorID"].downcase == device["subVendorID"].downcase 
+                        c["SubVendorID"].downcase == device["subVendorID"].downcase
           else
             sub_truth = true
           end
-  
+
           return data if c["DeviceID"].downcase == device["deviceID"].downcase and
                          c["VendorID"].downcase == device["vendorID"].downcase and
                          sub_truth
@@ -202,7 +200,6 @@ class WSMANUpdate
   #
   def sort_updates(updates)
     return updates if updates.nil? or updates.size == 0
-
 
     ans = updates.sort do |a,b|
       af = a[1]
@@ -284,10 +281,10 @@ class WSMANUpdate
       instanceList = @wsman.processResponse(xml, '["Body"]["EnumerateResponse"]["Items"]["Item"]')
       instanceList = (instanceList.instance_of?(Array))?instanceList:[instanceList]
       instanceList.each do |instance|
-        compId = instance['DCIM_SoftwareIdentity']['ComponentID']
-        instID = instance['DCIM_SoftwareIdentity']['InstanceID']
-        verStr = (instance['DCIM_SoftwareIdentity']['VersionString']).strip
-        elName = instance['DCIM_SoftwareIdentity']['ElementName']
+        compId = instance["DCIM_SoftwareIdentity"]["ComponentID"]
+        instID = instance["DCIM_SoftwareIdentity"]["InstanceID"]
+        verStr = (instance["DCIM_SoftwareIdentity"]["VersionString"]).strip
+        elName = instance["DCIM_SoftwareIdentity"]["ElementName"]
         if (LOOKUP_STRS.has_key?(compId))
           tempStr = LOOKUP_STRS[compId]
           puts "No downgrade for #{tempStr}...Skipping"
@@ -298,7 +295,7 @@ class WSMANUpdate
             @currHash[compId] = instance
           elsif (instID =~ /DCIM:AVAILABLE.*/i)
             if (@prevHash.has_key?(compId))
-              prevVer = (@prevHash[compId]['DCIM_SoftwareIdentity']['VersionString']).strip
+              prevVer = (@prevHash[compId]["DCIM_SoftwareIdentity"]["VersionString"]).strip
               if ((verStr <=> prevVer) == 0)
                 puts "Available versions match..."
               elsif ((verStr <=> prevVer) == -1)
@@ -314,10 +311,10 @@ class WSMANUpdate
             puts "Not handling version for hash insertion .. #{instID}"
           end
         elsif (compId.is_a?(Hash))
-          deviceId    = instance['DCIM_SoftwareIdentity']['DeviceID']
-          subDeviceId = instance['DCIM_SoftwareIdentity']['SubDeviceID']
-          vendorId    = instance['DCIM_SoftwareIdentity']['VendorID']
-          subVendorId = instance['DCIM_SoftwareIdentity']['SubVendorID']
+          deviceId    = instance["DCIM_SoftwareIdentity"]["DeviceID"]
+          subDeviceId = instance["DCIM_SoftwareIdentity"]["SubDeviceID"]
+          vendorId    = instance["DCIM_SoftwareIdentity"]["VendorID"]
+          subVendorId = instance["DCIM_SoftwareIdentity"]["SubVendorID"]
           newKey = formulate_key(vendorId,deviceId,subVendorId,subDeviceId)
           ## Each port on a NIC will show up as a separate device..but for all
           ## of them one update job is all that is required..
@@ -333,7 +330,7 @@ class WSMANUpdate
             end
           elsif (instID =~ /DCIM:AVAILABLE.*/i)
             if (@prevHash.has_key?(newKey))
-              prevVer = (@prevHash[newKey]['DCIM_SoftwareIdentity']['VersionString']).strip
+              prevVer = (@prevHash[newKey]["DCIM_SoftwareIdentity"]["VersionString"]).strip
               if ((verStr <=> prevVer) == 0)
                 puts "Available versions match...skipping hash op"
               elsif ((verStr <=> prevVer) == -1)
@@ -378,8 +375,8 @@ class WSMANUpdate
       instanceList = @wsman.processResponse(xml, '["Body"]["EnumerateResponse"]["Items"]["Item"]')
       instanceList = (instanceList.instance_of?(Array))?instanceList:[instanceList]
       instanceList.each do |instance|
-        fqdd = instance['DCIM_SoftwareIdentity']['FQDD']
-        instID = instance['DCIM_SoftwareIdentity']['InstanceID']
+        fqdd = instance["DCIM_SoftwareIdentity"]["FQDD"]
+        instID = instance["DCIM_SoftwareIdentity"]["InstanceID"]
         if (instID =~ /DCIM:INSTALLED.*/i)
           @currHash[fqdd] = instance
         elsif (instID =~ /DCIM:PREVIOUS.*/i)
@@ -433,9 +430,9 @@ class WSMANUpdate
     prevHash.each do |fqdd, instance|
       #puts fqdd
       if (currHash.has_key?(fqdd))
-        prevVer = (instance['DCIM_SoftwareIdentity']['VersionString']).strip
-        currVer = (currHash[fqdd]['DCIM_SoftwareIdentity']['VersionString']).strip
-        elName  = instance['DCIM_SoftwareIdentity']['ElementName']
+        prevVer = (instance["DCIM_SoftwareIdentity"]["VersionString"]).strip
+        currVer = (currHash[fqdd]["DCIM_SoftwareIdentity"]["VersionString"]).strip
+        elName  = instance["DCIM_SoftwareIdentity"]["ElementName"]
         if ( (prevVer <=> currVer) == -1 )
           puts "Downgrading #{fqdd}::#{elName} from #{currVer} to #{prevVer}"
           initiate_downgrade(instance)
@@ -470,12 +467,7 @@ class WSMANUpdate
     soapEnv = formulate_soap_envelope(selStr)
     install_from_software_identity(soapEnv)
   end
-
-
-
-
 end
-
 end
 end
 
@@ -485,12 +477,12 @@ end
 # Assumes that supported.json has been returned
 #
 def test_update(opts)
-  require 'wsman'
+  require "wsman"
   sys = %x{dmidecode -t system | grep "Product Name:" | awk -F: '{ print $2 }'}.strip!
   puts "System: #{sys}"
 
   system("wget -q http://#{opts[:prov_ip]}:#{opts[:prov_port]}/files/wsman/supported.json -O /tmp/supported.json")
-  jsondata = File.read('/tmp/supported.json')
+  jsondata = File.read("/tmp/supported.json")
   data = JSON.parse(jsondata)
   unless data
     puts "Failed to load the supported file"

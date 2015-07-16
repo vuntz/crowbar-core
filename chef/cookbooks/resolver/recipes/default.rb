@@ -48,11 +48,11 @@ unless node[:platform] == "windows"
       owner "root"
       group "root"
       mode 0644
-      variables(:nameservers => dns_list)
+      variables(nameservers: dns_list)
     end
 
     service "dnsmasq" do
-      supports :status => true, :start => true, :stop => true, :restart => true
+      supports status: true, start: true, stop: true, restart: true
       action [:enable, :start]
       subscribes :restart, "template[/etc/dnsmasq.conf]"
       subscribes :restart, "template[/etc/resolv-forwarders.conf]"
@@ -66,6 +66,6 @@ unless node[:platform] == "windows"
     owner "root"
     group "root"
     mode 0644
-    variables(:nameservers => dns_list, :search => node[:dns][:domain])
+    variables(nameservers: dns_list, search: node[:dns][:domain])
   end
 end

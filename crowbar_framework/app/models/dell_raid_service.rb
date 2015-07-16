@@ -14,23 +14,22 @@
 #
 
 class DellRaidService < ServiceObject
-
   def initialize(thelogger)
     @bc_name = "dell_raid"
     @logger = thelogger
   end
-  
+
   def create_proposal
     @logger.debug("Raid create_proposal: entering")
     base = super
     @logger.debug("Raid create_proposal: exiting")
     base
   end
-  
+
   def transition(inst, name, state)
     @logger.debug("DellRaid transition: make sure that role is on all nodes: #{name} for #{state}")
-    
-    ret = nil 
+
+    ret = nil
     case state
       when "discovering"
         ret = add_role(inst, name, state, "discover-raid" )
@@ -43,9 +42,8 @@ class DellRaidService < ServiceObject
     ret unless ret.nil?
 
     @logger.debug("DellRaid transition: leaving for #{name} for #{state}")
-    [200, NodeObject.find_node_by_name(name).to_hash ]
+    [200, NodeObject.find_node_by_name(name).to_hash]
   end
-
 
    def add_role(inst, name, state, new_role)
 
@@ -54,10 +52,8 @@ class DellRaidService < ServiceObject
      role = RoleObject.find_role_by_name "dell_raid-config-#{inst}"
      result = add_role_to_instance_and_node("dell_raid", inst, name, db, role, new_role )
      @logger.debug("DellRaid transition: leaving from installed state for #{name} for #{state}")
-     a = [200, NodeObject.find_node_by_name(name).to_hash ] if result
+     a = [200, NodeObject.find_node_by_name(name).to_hash] if result
      a = [400, "Failed to add role to node"] unless result
      return a
    end
-
-   
 end

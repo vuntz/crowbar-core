@@ -20,10 +20,10 @@
 # /opt/dell/barclamps/bios/chef/data_bags/crowbar-data/bios-set-PowerEdgeR720xd-Hadoop.json
 #
 
-require 'rubygems'
-require 'chef'
-require 'wsman'
-require 'wsman_attributes'
+require "rubygems"
+require "chef"
+require "wsman"
+require "wsman_attributes"
 
 def merge_hash(base, adds)
   adds["attributes"].each do |k, groups|
@@ -77,7 +77,7 @@ def test_value(item, attributes)
       head, sep, attr = head.rpartition(/[#.:]/)
     end
   end
-  
+
   unless group_part
     return true, "Item #{item.instance_id} is not set from file (group)"
   end
@@ -146,11 +146,11 @@ def diff_attributes(opts, files)
     int_range = "#{item.lower_bound} #{item.upper_bound}" if item.is_integer
     possible_values = "#{item.possible_values.join(",")}" if item.is_enumeration
 
-    json["attributes"][fqdd][group_id][item.attribute_name] = { 
-      "instance_id" => item.instance_id, 
-      "value" => item.current_value, 
-      "attr_name" => item.attribute_name, 
-      "GroupID" => item.group_id, 
+    json["attributes"][fqdd][group_id][item.attribute_name] = {
+      "instance_id" => item.instance_id,
+      "value" => item.current_value,
+      "attr_name" => item.attribute_name,
+      "GroupID" => item.group_id,
       "DefaultValue" => item.default_value,
       "ReadOnly" => item.is_read_only,
       "type" => item.type,
@@ -158,7 +158,7 @@ def diff_attributes(opts, files)
       "integer_range" => int_range,
       "string_range" => str_range
     }
- 
+
     val, str = test_value(item, test_attrs["attributes"])
     puts "Mismatch: #{str}" unless val
     results = results + "\n" + str
@@ -174,8 +174,7 @@ def diff_attributes(opts, files)
   puts JSON.pretty_generate(json)
 end
 
-
-opts = { :host => ARGV.shift, :user => ARGV.shift, :password => ARGV.shift, :port => 443, :debug_time => false }
+opts = { host: ARGV.shift, user: ARGV.shift, password: ARGV.shift, port: 443, debug_time: false }
 files = ARGV
 
 diff_attributes(opts, files)

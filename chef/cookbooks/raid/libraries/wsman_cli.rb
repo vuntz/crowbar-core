@@ -14,17 +14,17 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'pp'
-require 'wsman'
- 
-require File.join(File.dirname(__FILE__), 'raid_data')
+require "rubygems"
+require "pp"
+require "wsman"
 
-ENUMERATE_CMD = 'enumerate'
-INVOKE_CMD = 'invoke' 
-GET_CMD = 'get'
-CONVERT_TO_RAID_CMD = "ConvertToRAID" 
-RESET_CONF_CMD      = "ResetConfig" 
+require File.join(File.dirname(__FILE__), "raid_data")
+
+ENUMERATE_CMD = "enumerate"
+INVOKE_CMD = "invoke"
+GET_CMD = "get"
+CONVERT_TO_RAID_CMD = "ConvertToRAID"
+RESET_CONF_CMD      = "ResetConfig"
 CLEAR_FOREIGN_CMD   = "ClearForeignConfig"
 GET_RAID_CMD        = "GetRAIDLevels"
 CHANGE_BOOT_ORDER_CMD = "ChangeBootOrderByInstanceID"
@@ -40,37 +40,35 @@ CSIOR_ATTR_URI = "#{WSMAN_URI_NS}/DCIM_LCEnumeration?InstanceID=DCIM_LCEnumerati
 
 SPAN_LENGTH = 2
 
-RAID0_VAL  = '2'
-RAID1_VAL  = '4'
-RAID10_VAL = '2048'
-RAID5_VAL  = '64'
-RAID6_VAL  = '128'
-RAID50_VAL = '8192'
-RAID60_VAL = '16384'
+RAID0_VAL  = "2"
+RAID1_VAL  = "4"
+RAID10_VAL = "2048"
+RAID5_VAL  = "64"
+RAID6_VAL  = "128"
+RAID50_VAL = "8192"
+RAID60_VAL = "16384"
 
 RAID10_SPAN_TABLE = {
-  4 => { :span_depth => 2, :span_length => 2 },
-  6 => { :span_depth => 3, :span_length => 2 },
-  8 => { :span_depth => 4, :span_length => 2 },
- 10 => { :span_depth => 5, :span_length => 2 },
- 12 => { :span_depth => 6, :span_length => 2 },
- 14 => { :span_depth => 7, :span_length => 2 },
- 16 => { :span_depth => 8, :span_length => 2 },
- 18 => { :span_depth => 3, :span_length => 6 },
- 20 => { :span_depth => 5, :span_length => 4 },
- 22 => { :span_depth => 5, :span_length => 4, :drop_count => 2 }, # EEK!!
- 24 => { :span_depth => 6, :span_length => 4 },
- 26 => { :span_depth => 6, :span_length => 4, :drop_count => 2 }, # EEK!!
- 28 => { :span_depth => 7, :span_length => 2 },
- 30 => { :span_depth => 5, :span_length => 6 },
- 32 => { :span_depth => 8, :span_length => 4 }
+  4 => { span_depth: 2, span_length: 2 },
+  6 => { span_depth: 3, span_length: 2 },
+  8 => { span_depth: 4, span_length: 2 },
+ 10 => { span_depth: 5, span_length: 2 },
+ 12 => { span_depth: 6, span_length: 2 },
+ 14 => { span_depth: 7, span_length: 2 },
+ 16 => { span_depth: 8, span_length: 2 },
+ 18 => { span_depth: 3, span_length: 6 },
+ 20 => { span_depth: 5, span_length: 4 },
+ 22 => { span_depth: 5, span_length: 4, drop_count: 2 }, # EEK!!
+ 24 => { span_depth: 6, span_length: 4 },
+ 26 => { span_depth: 6, span_length: 4, drop_count: 2 }, # EEK!!
+ 28 => { span_depth: 7, span_length: 2 },
+ 30 => { span_depth: 5, span_length: 6 },
+ 32 => { span_depth: 8, span_length: 4 }
 }
 
 class Crowbar
   class RAID
     class WsManCli < Crowbar::RAID::Driver
-      
-     
       attr_accessor :raid_svc_uri
 
       VD_STATUS_MAP = {
@@ -131,7 +129,7 @@ class Crowbar
                       }
 
       def initialize(node)
-        require 'wsman'
+        require "wsman"
         $in_chef = true
         user = node[:ipmi][:bmc_user] if (node[:ipmi] and node[:ipmi][:bmc_user])
         password = node[:ipmi][:bmc_password] if (node[:ipmi] and node[:ipmi][:bmc_password])
@@ -141,9 +139,9 @@ class Crowbar
         else
           puts("BMC/iDRAC IP is null")
         end
-        opts = { :user => user, :password => password, :host => host, :port => 443, :debug_time => true }
+        opts = { user: user, password: password, host: host, port: 443, debug_time: true }
         if (host)
-          wsman = Crowbar::WSMAN.new(opts) 
+          wsman = Crowbar::WSMAN.new(opts)
           @wsman = wsman
         else
           @wsman = nil
@@ -166,9 +164,9 @@ class Crowbar
             puts "LC not ready for commands...Retrying after 30s"
             sleep 30
           end
-        end 
+        end
       end
-      
+
       def job_status(job_id)
         log("job_status, job_id: #{job_id}.")
         url = "#{LIFECYCLE_JOB_URI}?InstanceID=#{job_id}"
@@ -207,24 +205,24 @@ class Crowbar
       end
 
       def parse_cntr_info(raw_cntr)
-         c = Controller.new(:controller_id          => raw_cntr['FQDD'],
-                            :vendor_id              => raw_cntr['PCIVendorID'],
-                            :sub_vendor_id          => raw_cntr['PCISubVendorID'],
-                            :device_id              => raw_cntr['PCIDeviceID'],
-                            :sub_device_id          => raw_cntr['PCISubDeviceID'],
-                            :pci_slot               => raw_cntr['PCISlot'],
-                            :bus                    => raw_cntr['Bus'],
-                            :device                 => raw_cntr['Device'],
-                            :function               => raw_cntr['Function'],
-                            :firmware_version       => raw_cntr['ControllerFirmwareVersion'],
-                            :supported_raid_levels  => Array.new,
-                            :has_non_raid_disks     => false,
-                            :product_name           => raw_cntr['ProductName'])
+         c = Controller.new(controller_id: raw_cntr["FQDD"],
+                            vendor_id: raw_cntr["PCIVendorID"],
+                            sub_vendor_id: raw_cntr["PCISubVendorID"],
+                            device_id: raw_cntr["PCIDeviceID"],
+                            sub_device_id: raw_cntr["PCISubDeviceID"],
+                            pci_slot: raw_cntr["PCISlot"],
+                            bus: raw_cntr["Bus"],
+                            device: raw_cntr["Device"],
+                            function: raw_cntr["Function"],
+                            firmware_version: raw_cntr["ControllerFirmwareVersion"],
+                            supported_raid_levels: Array.new,
+                            has_non_raid_disks: false,
+                            product_name: raw_cntr["ProductName"])
          c
       end
 
       def enumerate_topology
-        
+
         @controllers = []
         controllerList = get_controllers()
 
@@ -268,7 +266,7 @@ class Crowbar
         end
         assocDiskList
       end
-      
+
       def get_controllers
         log("get all controllers.")
         puts "Enumerating all controllers on system"
@@ -306,53 +304,53 @@ class Crowbar
           return nil
         end
       end
-      
+
       def parse_dev_info(phys_disks)
         phys_disks = (phys_disks.instance_of?(Array))?phys_disks:[phys_disks]
         devs = []
-        
-        unless phys_disks.nil? 
-          phys_disks.each do |disk| 
+
+        unless phys_disks.nil?
+          phys_disks.each do |disk|
             rd = Crowbar::RAID::RaidDisk.new
-            rd.disk_id         = disk['FQDD']
+            rd.disk_id         = disk["FQDD"]
             rd.enclosure       = 0 # need to look into this,  WSMAN doesn't treat enclosures as integer values but FQDDs
-            rd.slot            = disk['Slot'].to_i      
-            rd.size            = disk['SizeInBytes'].to_i  
-            rd.sas_address     = disk['SASAddress'].strip if disk['SASAddress'] and !disk['SASAddress'].is_a?(Hash)
-            rd.serial_number   = disk['SerialNumber'].strip if disk['SerialNumber'] and !disk['SerialNumber'].is_a?(Hash)
-            rd.model           = disk['Model'].strip if disk['Model']
-            rd.manufacturer    = disk['Manufacturer'] if disk['Manufacturer']
-            rd.protocol        = BUS_PROTO_MAP[disk['BusProtocol']] if disk['BusProtocol']
-            rd.status          = CTRL_STATUS_MAP[disk['RollupStatus']] if disk['RollupStatus'] 
-            rd.media_type      = MEDIA_TYPE_MAP[disk['MediaType']] if disk['MediaType']
-            rd.raid_status     = disk['RaidStatus'] if disk['RaidStatus']
+            rd.slot            = disk["Slot"].to_i
+            rd.size            = disk["SizeInBytes"].to_i
+            rd.sas_address     = disk["SASAddress"].strip if disk["SASAddress"] and !disk["SASAddress"].is_a?(Hash)
+            rd.serial_number   = disk["SerialNumber"].strip if disk["SerialNumber"] and !disk["SerialNumber"].is_a?(Hash)
+            rd.model           = disk["Model"].strip if disk["Model"]
+            rd.manufacturer    = disk["Manufacturer"] if disk["Manufacturer"]
+            rd.protocol        = BUS_PROTO_MAP[disk["BusProtocol"]] if disk["BusProtocol"]
+            rd.status          = CTRL_STATUS_MAP[disk["RollupStatus"]] if disk["RollupStatus"]
+            rd.media_type      = MEDIA_TYPE_MAP[disk["MediaType"]] if disk["MediaType"]
+            rd.raid_status     = disk["RaidStatus"] if disk["RaidStatus"]
             if ((rd.media_type) and (rd.protocol))
               rd.media_type = rd.protocol.to_s + "_" + rd.media_type.to_s
             end
             devs << rd
           end
-        end  
+        end
         devs
       end
-      
+
       def boot_source_settings()
         log("boot_source_settings.")
         bss = nil
         url = "#{WSMAN_URI_NS}/DCIM_BootSourceSetting"
         xml = @wsman.command(ENUMERATE_CMD, url, "-m 512")
         if (xml)
-          bss = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_BootSourceSetting"]')   
-        else 
+          bss = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_BootSourceSetting"]')
+        else
           puts "No boot source settings found...Returning nil"
         end
         bss
       end
-      
+
       def boot_config_settings()
         log("boot_config_settings.")
         url = "#{WSMAN_URI_NS}/DCIM_BootConfigSetting"
         xml = @wsman.command(ENUMERATE_CMD, url, "-m 512")
-        bcs = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_BootConfigSetting"]')   
+        bcs = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_BootConfigSetting"]')
         bcs
       end
 
@@ -360,35 +358,34 @@ class Crowbar
         log("raid_pd_states.")
         url = "#{WSMAN_URI_NS}/DCIM_RAIDEnumeration"
         xml = @wsman.command(ENUMERATE_CMD, url, "-m 512")
-        re = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_RAIDEnumeration"]')  
-        raidPds = Array.new 
-        re.each do |re| 
-         raidPds << re if re['AttributeName']=='RAIDPDState'
+        re = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_RAIDEnumeration"]')
+        raidPds = Array.new
+        re.each do |re|
+         raidPds << re if re["AttributeName"]=="RAIDPDState"
         end
         raidPds
       end
-      
-        
+
       def virtual_disks(physDiskList)
         log("virtual_disks.")
         url = "#{WSMAN_URI_NS}/DCIM_VirtualDiskView"
         xml = @wsman.command(ENUMERATE_CMD, url, "-m 512 -t 60000") if (@wsman)
         if (xml)
-          virt_disks = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_VirtualDiskView"]')   
+          virt_disks = @xml.processResponse(xml,'["Body"]["EnumerateResponse"]["Items"]["DCIM_VirtualDiskView"]')
           return (virt_disks.nil?)?nil:parse_volumes(virt_disks,physDiskList)
         else
           log("Unable to enumerate virtual disks...returning nil")
           return nil
         end
       end
-      
+
     def parse_volumes(virt_disks, physDiskList)
       log("parse_volumes.")
       virt_disks = (virt_disks.instance_of?(Array))?virt_disks:[virt_disks]
-      vols = []    
-      
-      unless virt_disks.nil? 
-        virt_disks.each do |vdisk| 
+      vols = []
+
+      unless virt_disks.nil?
+        virt_disks.each do |vdisk|
           rv = Crowbar::RAID::Volume. new()
           rv.vol_id      = vdisk["FQDD"]
           rv.vol_name    = vdisk["Name"] if vdisk["Name"] and !vdisk["Name"].is_a?(Hash)
@@ -397,13 +394,13 @@ class Crowbar
           rv.span_length = vdisk["SpanLength"]
           rv.stripe_size = Integer(vdisk["StripeSize"])
           rv.members     = disks_by_id(vdisk["PhysicalDiskIDs"], physDiskList)
-          rv.raid_level  = RAID_LEVEL_MAP[vdisk['RAIDTypes']] if vdisk['RAIDTypes']
+          rv.raid_level  = RAID_LEVEL_MAP[vdisk["RAIDTypes"]] if vdisk["RAIDTypes"]
           vols << rv
         end
-      end  
+      end
       vols
     end
-    
+
     def disks_by_id(disk_ids, disks)
       disk_ids = (disk_ids.instance_of?(Array))?disk_ids:[disk_ids]
       answer = []
@@ -414,22 +411,22 @@ class Crowbar
       end
       answer
     end
-    
+
     def disk_by_id(disk_id, disks)
       disk = nil
       unless disks.nil?
         disks.each do |pd|
           next unless pd
           if disk_id == pd.disk_id
-            disk = pd 
+            disk = pd
           end
         end
       end
       disk
     end
-      
+
       def available_disks()
-        log("available_disks.") 
+        log("available_disks.")
         sub_cmd = "GetAvailableDisks"
         inputFile = "/tmp/#{sub_cmd}.xml"
         File.open("#{inputFile}", "w+") do |f|
@@ -442,7 +439,7 @@ class Crowbar
            </p:GetAvailableDisks_INPUT>
           ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         if (@raid_svc_uri.nil?)
           @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS)
@@ -459,16 +456,16 @@ class Crowbar
           return nil
         end
       end
-      
+
       def check_vd_values(fqdd, availableDisks, raidLevel="2048")
         log "check_vd_values for: #{fqdd}."
-        
+
         # generate the PDArray
         pdArray=""
         availableDisks.each do |diskFqdd|
           pdArray += "<p:PDArray>#{diskFqdd}</p:PDArray>"
         end
-        
+
         sub_cmd = "CheckVDValues"
         inputFile = "/tmp/#{sub_cmd}.xml"
         File.open("#{inputFile}", "w+") do |f|
@@ -481,7 +478,7 @@ class Crowbar
           </p:CheckVDValues_INPUT>
           ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         if (@raid_svc_uri.nil?)
           @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS)
@@ -499,17 +496,14 @@ class Crowbar
           return nil
         end
       end
-      
-      
-      
+
       def describe
         "WSMAN RAID driver"
       end
-      
-     
+
       ## Raid config jobs now do not reboot the system immediately
-      ## All raid config jobs across controllers are stacked in the 
-      ## job queue and triggered via a reboot job 
+      ## All raid config jobs across controllers are stacked in the
+      ## job queue and triggered via a reboot job
       def create_raid_config_job(fqdd)
         log("create_raid_config_job.")
         wait_until_lc_ready()
@@ -521,9 +515,9 @@ class Crowbar
              <p:Target>#{fqdd}</p:Target>
              <p:ScheduledStartTime>TIME_NOW</p:ScheduledStartTime>
             </p:CreateTargetedConfigJob_INPUT>
-          ] 
+          ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         if (@raid_svc_uri.nil?)
           @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS)
@@ -556,7 +550,7 @@ class Crowbar
         #    jobArray.unshift(jobID)
         #    retVal = @wsman.setup_job_queue_multi(jobArray)
         #    if (retVal)
-        #      retValue = true 
+        #      retValue = true
         #    else
         #      puts "Unable to set up the job queue for RAID jobs"
         #    end
@@ -564,9 +558,8 @@ class Crowbar
         #    puts "Unable to create a reboot job...Exiting"
         #  end
         #end
-        retValue 
+        retValue
       end
-
 
       def create_bios_config_job()
         log("create_bios_config_job.")
@@ -580,31 +573,30 @@ class Crowbar
                  <p:RebootJobType>1</p:RebootJobType>
                  <p:ScheduledStartTime>TIME_NOW</p:ScheduledStartTime>
                </p:CreateTargetedConfigJob_INPUT>
-          ] 
+          ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         bios_svc_uri = @wsman.find_instance_uri(BIOS_SVC_CLASS)
         xml = @wsman.command(cmd, bios_svc_uri, "-J #{inputFile}")
         returnVal = @xml.returnValue(xml,sub_cmd)
-        
+
         if returnVal == RETURN_CONFIG_VAL_OK
           return RETURN_CONFIG_VAL_OK
         else
           response = @xml.processResponse(xml,'["Body"]["CreateTargetedConfigJob_OUTPUT"]')
           raise "Could not create bios config job, response: #{response.inspect}"
           return RETURN_VAL_FAIL
-          
+
         end
       end
-     
 
-      ## Utility method to delete the pending configuration on all 
+      ## Utility method to delete the pending configuration on all
       ## enumerated controllers...
       def delete_pending_config_on_controllers(controllerList)
         if (controllerList and controllerList.length > 0)
           controllerList.each do |cntrlr|
-            delete_pending_config(cntrlr['FQDD'])
+            delete_pending_config(cntrlr["FQDD"])
           end
         end
       end
@@ -628,12 +620,12 @@ class Crowbar
             <p:DeletePendingConfiguration_INPUT xmlns:p="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/root/dcim/DCIM_RAIDService">
                 <p:Target>#{fqdd}</p:Target>
              </p:DeletePendingConfiguration_INPUT>
-          ] 
+          ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         if (@raid_svc_uri.nil?)
-          @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS) 
+          @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS)
         end
         if (@wsman)
           xml = @wsman.command(cmd, @raid_svc_uri, "-J #{inputFile}")
@@ -643,20 +635,20 @@ class Crowbar
         end
         return returnVal
     end
-    
+
 =begin
-       Ideally I would have liked to call check_vd_values and have it return the params I should use but 
+       Ideally I would have liked to call check_vd_values and have it return the params I should use but
         it did not work out, many attribute errors with no trace from WSMAN.
         #generate properties array code
          propArray = ""
         vd_values.each do |key, value|
           propArray +="<p:VDPropNameArrayIn>#{key}</p:VDPropNameArrayIn>\n<p:VDPropValueArrayIn>#{value}</p:VDPropValueArrayIn>"
-        end 
-=end      
+        end
+=end
 
       def evaluate_array_size(disk_size_arr, raid_level)
         ret_val       = 0
-        max_vol_size  = (Crowbar::RAID::TERA * 2 - Crowbar::RAID::MEGA) 
+        max_vol_size  = (Crowbar::RAID::TERA * 2 - Crowbar::RAID::MEGA)
         case raid_level
           when :RAID0
           ## size of volume is numDisks * size of lowest disk
@@ -664,7 +656,7 @@ class Crowbar
 
           when :RAID1
           ## size of volume is just size of the lowest disk
-          ret_val = disk_size_arr[0] 
+          ret_val = disk_size_arr[0]
 
           when :RAID10
           ## size of volume is (numDisks / 2) * size of lowest disk
@@ -673,7 +665,7 @@ class Crowbar
           when :JBOD
           #pseudo raid0 level
           ret_val = disk_size_arr[0]
-        end 
+        end
         ret_val = max_vol_size if (ret_val > max_vol_size)
         puts "DBG: returning size of RAID volume to be #{ret_val}"
         return ret_val
@@ -681,8 +673,8 @@ class Crowbar
 
       def create_vd(cntrlr,volume_description)
         log("create_vd, raid_level: #{volume_description[:type]}")
-        convert_to_raid(volume_description[:disks]) 
-        sub_cmd = "CreateVirtualDisk" 
+        convert_to_raid(volume_description[:disks])
+        sub_cmd = "CreateVirtualDisk"
         inputFile = "/tmp/#{sub_cmd}.xml"
         max_size = nil
         cmd      = "#{INVOKE_CMD} -a #{sub_cmd}"
@@ -690,11 +682,10 @@ class Crowbar
         name     = volume_description[:name] if volume_description[:name]
         max_size = volume_description[:size] if volume_description[:size] != "MAX"
         stripe_size = volume_description[:stripe_size]
-        max_vol_size       = (Crowbar::RAID::TERA * 2 - Crowbar::RAID::MEGA) 
+        max_vol_size       = (Crowbar::RAID::TERA * 2 - Crowbar::RAID::MEGA)
         disk_size_arr      = []
 
-       
-        spanLength = disks.length 
+        spanLength = disks.length
         spanDepth = disks.length
         returnVal = nil;
         if (@raid_svc_uri.nil?)
@@ -712,7 +703,7 @@ class Crowbar
               max_size = max_vol_size
             else
               disks.each do |disk|
-                disk_size_arr << disk.size 
+                disk_size_arr << disk.size
               end
               disk_size_arr.sort!
               max_size = evaluate_array_size(disk_size_arr, raid_level)
@@ -745,7 +736,7 @@ class Crowbar
             xml = @wsman.command(cmd, @raid_svc_uri, "-J #{inputFile}")
             returnVal = @xml.returnValue(xml,sub_cmd)
 
-            when :JBOD 
+            when :JBOD
             disks.each do |disk|
               create_volume_input_file(inputFile, name, [disk], RAID0_VAL, 1, 1, max_size, stripe_size)
               xml = @wsman.command(cmd, @raid_svc_uri, "-J #{inputFile}")
@@ -762,25 +753,25 @@ class Crowbar
             create_volume_input_file(inputFile, name, disks, RAID6_VAL, 1, disks.length, max_size, stripe_size)
             xml = @wsman.command(cmd, @raid_svc_uri, "-J #{inputFile}")
             returnVal = @xml.returnValue(xml,sub_cmd)
-            
+
           else
-            raise "unknown raid level requested: #{raid_level}" 
+            raise "unknown raid level requested: #{raid_level}"
           end
-          
+
           if returnVal==RETURN_VAL_OK
             RETURN_VAL_OK
           else #return the error
-            raise "failed create volume, response: #{@xml.processResponse(xml,'["Body"]["CreateVirtualDisk_OUTPUT"]')}" 
+            raise "failed create volume, response: #{@xml.processResponse(xml,'["Body"]["CreateVirtualDisk_OUTPUT"]')}"
           end
         rescue Exception => e
           log("Create volume failed, reason: #{e.message}", :ERROR)
           delete_pending_config(cntrlr.controller_id)
           RETURN_VAL_FAIL
-        end 
+        end
       end
 
       def convert_to_raid(disks)
-        log("convert_to_raid.")  
+        log("convert_to_raid.")
         toRaid = Array.new
 
         disks.each do |disk|
@@ -808,7 +799,7 @@ class Crowbar
           RETURN_VAL_FAIL
         end
       end
-      
+
       def create_ctr_input_file(disks)
         pdArray=""
         disks.each do |disk|
@@ -823,15 +814,14 @@ class Crowbar
           ]
         end
       end
-      
-      
+
       def create_volume_input_file(path, name, disks, raid_level, span_depth, span_length, max_size, stripe_size = nil)
-        pdArray="" 
+        pdArray=""
         disks.each do |disk|
-          pdArray += "<p:PDArray>#{disk.disk_id}</p:PDArray>" 
+          pdArray += "<p:PDArray>#{disk.disk_id}</p:PDArray>"
         end
         fqdd = disks[0].controller.controller_id
-        
+
         sizeProp = ""
         sizeVal = ""
         isJBOD = (raid_level==RAID0_VAL && span_depth==1 && span_length==1)
@@ -855,7 +845,7 @@ class Crowbar
             <p:Target>#{fqdd}</p:Target>
             #{pdArray}
             <p:VDPropNameArray>RAIDLevel</p:VDPropNameArray>
-            <p:VDPropNameArray>SpanDepth</p:VDPropNameArray> 
+            <p:VDPropNameArray>SpanDepth</p:VDPropNameArray>
             <p:VDPropNameArray>SpanLength</p:VDPropNameArray>
             #{sizeProp}
             #{stripeSizeProp}
@@ -868,7 +858,7 @@ class Crowbar
           ]
           end
       end
-      
+
       ## RKR: With new changes to reset the configuration this code for ##
       ## deleting individual and all volumes should never get hit again ##
       def delete_vd_by_id(cid, vid)
@@ -884,7 +874,7 @@ class Crowbar
           </p:#{sub_cmd}_INPUT>
           ]
           end
-          
+
           cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
           if (@raid_svc_uri.nil?)
             @raid_svc_uri = @wsman.find_instance_uri(RAID_SVC_CLASS)
@@ -893,7 +883,7 @@ class Crowbar
           returnVal = @xml.returnValue(xml,sub_cmd)
           raise "DeleteVirtualDisk call failed with return code: #{returnVal}" if returnVal.nil? || returnVal != RETURN_VAL_OK
           RETURN_VAL_OK
-        rescue Exception => e 
+        rescue Exception => e
           log("Failed deleting volume, exception: #{e.message}", :ERROR)
           delete_pending_config(cid)
           RETURN_VAL_FAIL # failure code.
@@ -906,7 +896,7 @@ class Crowbar
           volume.members.each do |d|
             next unless d.vol_id
             answer = delete_vd_by_id(d.controller.controller_id, d.vol_id)
-            fail = true if answer == RETURN_VAL_FAIL 
+            fail = true if answer == RETURN_VAL_FAIL
           end
           RETURN_VAL_FAIL if fail
           RETURN_VAL_OK unless fail
@@ -914,10 +904,10 @@ class Crowbar
           delete_vd_by_id(volume.controller.controller_id, volume.vol_id)
         end
       end
-     
+
       ## Currently the set_boot does not set HDD first...always sets NIC ##
       ## first...In theory when the state transitions out of installed   ##
-      ## we should boot off HDD and not serve up a file during PXE boot  ##                        
+      ## we should boot off HDD and not serve up a file during PXE boot  ##
       def set_boot(controller, volume, nic_first = true)
         log("Setting boot sources...set_boot recipe")
         current_mode = nil
@@ -1001,17 +991,16 @@ class Crowbar
              create_bios_config_job()
              sleep()
           end
-        end 
+        end
       end
-      
-      
+
       def is_csior_enabled()
         log "check_csior_enabled."
         xml = @wsman.command(GET_CMD, CSIOR_ATTR_URI)
         returnVal = @xml.processResponse(xml,'["Body"]["DCIM_LCEnumeration"]["CurrentValue"]')
         return !returnVal.nil? && returnVal=="Enabled"
       end
-      
+
       def enable_csior()
         log "enable_csior."
         wait_until_lc_ready()
@@ -1023,9 +1012,9 @@ class Crowbar
               <p:AttributeName>#{CSIOR_ATTR}</p:AttributeName>
               <p:AttributeValue>Disabled</p:AttributeValue>
             </p:SetAttribute_INPUT>
-          ] 
+          ]
         end
-        
+
         cmd  = "#{INVOKE_CMD} -a #{sub_cmd}"
         lc_svc_uri = @wsman.find_instance_uri(LC_SVC_CLASS)
         xml = @wsman.command(cmd, lc_svc_uri, "-J #{inputFile}")
@@ -1033,7 +1022,7 @@ class Crowbar
         returnVal = @xml.returnValue(xml,sub_cmd)
         log "enable_csior return val is: #{returnVal}"
         return returnVal
-        
+
       end
 
       def cleanup_test()
@@ -1050,25 +1039,25 @@ class Crowbar
               percent_complete = ""
               until percent_complete == "100"
                 percent_complete = job_status(job_id)
-                log "delete volumes job status percent complete: #{percent_complete}" 
+                log "delete volumes job status percent complete: #{percent_complete}"
                 sleep 5;
               end
               log "Delete all volumes done!!!!"
-            end 
+            end
           end
         end
       end
-      
+
       def create_vd_test(raid_level,name)
         log "create_vd_test."
         log "Available Disks: #{@available.inspect}"
         if (@available.nil? || @available.length == 0)
-          log "Unabled to find available disks for creating volume" 
+          log "Unabled to find available disks for creating volume"
           exit
         end
-        
+
         returnVal = create_volume(raid_level, name, @available, 100)
-        log "after create volume returnVal is: #{returnVal}" 
+        log "after create volume returnVal is: #{returnVal}"
         if returnVal !=RETURN_VAL_OK #create VD call not successful
           log "Failed creating volume, wsman returned: #{returnVal.inspect}, deleting pending config"
           delete_pending_config()
@@ -1081,14 +1070,13 @@ class Crowbar
             percent_complete = ""
             until percent_complete == "100"
               percent_complete = job_status(job_id)
-              log "job status percent complete: #{percent_complete}" 
+              log "job status percent complete: #{percent_complete}"
               sleep 1;
             end
             log "Create Volume Done!!!!"
           end
         end
       end
-
 
       def clear_controller_config(cntrlr, cmd)
         fqdd = cntrlr.controller_id
@@ -1128,24 +1116,23 @@ class Crowbar
                   cntrlr.supported_raid_levels << RAID_ENUM_MAP[raidLevel]
                   cntrlr.supported_raid_levels << :JBOD if RAID_ENUM_MAP[raidLevel] == :RAID0
                 end
-              end 
+              end
             end
           end
         rescue Exception => e
           log("Failed enumerating RAID attributes,exception: #{e.message}", :ERROR)
         end
       end
-
-    end 
-  end 
+    end
+  end
 end
 
 if __FILE__ == $0
-  require 'wsman' 
-  require 'xml_util'
-  host = '192.168.124.32'
-  user = 'root'
-  password = 'cr0wBar!'
+  require "wsman"
+  require "xml_util"
+  host = "192.168.124.32"
+  user = "root"
+  password = "cr0wBar!"
   port = 443
   node = Hash.new
   node[:ipmi] = Hash.new
@@ -1155,27 +1142,27 @@ if __FILE__ == $0
   node["crowbar_wall"]["ipmi"] = Hash.new
   node["crowbar_wall"]["ipmi"]["address"] = host
   puts "RKR:#{node.inspect}"
-  
+
   $in_chef = false
-  puts '....................... wsman_cli tester.......................'
-  opts = { :user => user, :password => password, :host => host, :port => 443, :debug_time => true }
+  puts "....................... wsman_cli tester......................."
+  opts = { user: user, password: password, host: host, port: 443, debug_time: true }
   wsman = Crowbar::WSMAN.new(node)
   raid = Crowbar::RAID::WsManCli.new(wsman)
   c = raid.enumerate_topology
   c.each do |con|
     puts "controller:Disks(#{con.disks.length}) Volumes(#{con.volumes.length})"
-    con.disks.each {|d| puts "Disk #{d.disk_id}:#{d.slot} = #{d.size}" }
-    con.volumes.each {|v| puts "Volume #{v.vol_id}:#{v.raid_level} = #{v.size}" }
+    con.disks.each { |d| puts "Disk #{d.disk_id}:#{d.slot} = #{d.size}" }
+    con.volumes.each { |v| puts "Volume #{v.vol_id}:#{v.raid_level} = #{v.size}" }
   end
-  
+
   #fqdd = raid.find_controller()
   #raid.log "Found raid controller #{fqdd}"
-  
+
   # raid.delete_pending_config()
   # exit
-  
+
   # raid.load_info()
-  
+
   # raid.available_disks(raid.fqdd)
   # raidLevels = raid.load_raid_levels(fqdd,availableDisks)
   # raid.log "RAID Levels: #{raidLevels.inspect}"

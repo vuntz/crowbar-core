@@ -14,19 +14,19 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'yaml'
-require 'json'
+require "rubygems"
+require "yaml"
+require "json"
 
 class XML_UTIL
-   # chef breaks if 'require' is outsite executable code for any GEMs 
+   # chef breaks if 'require' is outsite executable code for any GEMs
    # installed during compile phase in other recipies in run list
-   # Dependency checking is happening in libraries prior to compile phase. 
+   # Dependency checking is happening in libraries prior to compile phase.
    # Hack is to move 'require' in initialize() which is called during exectution phase.
    def initialize()
-     require 'xmlsimple' 
+     require "xmlsimple"
    end
-  
+
   def  processResponse(xml, path, options={"ForceArray" => false})
     begin
       hash = XmlSimple.xml_in(xml, options)
@@ -37,10 +37,9 @@ class XML_UTIL
       return nil
     end
   end
-  
+
   def returnValue(xml,cmd)
-    path = '["Body"]["' + cmd + '_OUTPUT"]["ReturnValue"]' 
+    path = '["Body"]["' + cmd + '_OUTPUT"]["ReturnValue"]'
     processResponse(xml , path)
   end
-  
 end

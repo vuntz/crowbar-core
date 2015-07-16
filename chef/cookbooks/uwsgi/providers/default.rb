@@ -1,5 +1,4 @@
 action :enable do
-
   # install pip and developer headers
   package "python-pip"
   package "python-dev"
@@ -20,14 +19,14 @@ action :enable do
   end
 
   options = {
-      :master => true,
-      :processes => 3,
-      :threads => 10,
-      :protocol => :http,
-      :callable => :application,
-      :module => :application,
-      :"buffer-size" => 12288,
-      :log => ::File.join("/var/log/",new_resource.name,new_resource.name+".log")
+      master: true,
+      processes: 3,
+      threads: 10,
+      protocol: :http,
+      callable: :application,
+      module: :application,
+      "buffer-size": 12288,
+      log: ::File.join("/var/log/",new_resource.name,new_resource.name+".log")
   }
   options.merge!(new_resource.options)
 
@@ -43,7 +42,7 @@ action :enable do
     mode "0755"
     cookbook "uwsgi"
     variables({
-      :config => file_enable,
+      config: file_enable
     })
   end
 
@@ -54,9 +53,9 @@ action :enable do
   # write config to file
   template file_available do
     variables ({
-      :options => options,
-      :instances => instances,
-      :application => new_resource.name
+      options: options,
+      instances: instances,
+      application: new_resource.name
     })
     cookbook "uwsgi"
     source "uwsgi-config.xml.erb"
@@ -71,13 +70,12 @@ action :enable do
   end
 
   service "#{new_resource.service_name}" do
-    supports :restart => true, :start => true, :stop => true, :status => true
+    supports restart: true, start: true, stop: true, status: true
     action [:enable, :start]
     subscribes :restart, "template[/etc/init.d/#{new_resource.service_name}]", :immediately
     subscribes :restart, "template[#{file_available}]", :immediately
     subscribes :restart, "link[#{file_enable}]", :immediately
   end
-
 end
 
 action :disable do

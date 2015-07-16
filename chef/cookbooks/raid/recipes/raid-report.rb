@@ -13,7 +13,6 @@
 # limitations under the License.
 #
 
-
 ##
 # this recipe performs substantially the same activites as the raid-configure, short
 # of actually attempting to configure the RAID controller.
@@ -23,23 +22,23 @@
 include_recipe "utils"
 
 raid_enable = node[:dell_raid][:enable] & @@centos
-log("BEGIN raid-report enabled=#{raid_enable}") {level :info} 
+log("BEGIN raid-report enabled=#{raid_enable}") { level :info }
 
 config_name = node[:crowbar][:hardware][:raid_set] rescue config_name = "JBODOnly"
 config_name ="raid-#{config_name}"
 config_bag = data_bag("crowbar-data")
 config = data_bag_item("crowbar-data",config_name) if config_bag.include?(config_name)
 log("Using config: #{config_name}")
-begin 
+begin
   ## push the MegaCLI packages, and insall them
   include_recipe "raid::install_tools"
-  
+
   raid_raid_config "lsi-raid-report" do
     config config["config"]
-    debug_flag   node[:raid][:debug]  
-    action [ :report ]
+    debug_flag node[:raid][:debug]
+    action [:report]
     problem_file "/var/log/chef/hw-problem.log"
   end
   node.save
 end if raid_enable and !config.nil? and !config.empty?
-log("END raid-report") {level :info} 
+log("END raid-report") { level :info }

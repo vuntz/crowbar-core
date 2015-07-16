@@ -15,19 +15,18 @@
 #
 # Author: aabes
 # Note : This script runs on both the admin and compute nodes.
-# 
+#
 
 include_recipe "nagios::common" if node["roles"].include?("nagios-client")
 nagios_plugins =node["nagios"]["plugin_dir"]
 raid = node["nagios"]["monitor_raid"]
 case node[:platform]
 when "centos", "redhat"
-  ; 
+  ;
 when "ubuntu", "suse"
   raid = nil  # our tools don't work on non-redhat
 end
 
-
 nagios_conf "monitor_hw" do
-  variables :raid => raid, :ipmi=> node["nagios"]["monitor_ipmi"]
+  variables raid: raid, ipmi: node["nagios"]["monitor_ipmi"]
 end

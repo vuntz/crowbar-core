@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'xmlsimple'
-require 'yaml'
-require 'json'
+require "rubygems"
+require "xmlsimple"
+require "yaml"
+require "json"
 
 class Crowbar
 class BIOS
@@ -37,11 +37,11 @@ class WSMAN
     return true if File.exists?(filename)
 
     output = %x{ping -W 3 -c 2 #{host} 2>/dev/null >/dev/null}
-    if $?.exitstatus != 0 
+    if $?.exitstatus != 0
       Chef::Log.error "Failed to ping host: #{host}"
       return false
     end
-  
+
     output = %x{echo | openssl s_client -connect #{host}:443 2>&1 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' >#{filename} 2>&1}
     if $?.exitstatus != 0
       Chef::Log.error output
@@ -107,8 +107,8 @@ class WSMAN
   #   TIME_NOW
   #
   def schedule_job(jid, time)
-    output = self.command("invoke -a SetupJobQueue", 
-                          "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/DCIM_JobService?CreationClassName=DCIM_JobService,Name=JobService,SystemName=Idrac,SystemCreationClassName=DCIM_ComputerSystem", 
+    output = self.command("invoke -a SetupJobQueue",
+                          "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/DCIM_JobService?CreationClassName=DCIM_JobService,Name=JobService,SystemName=Idrac,SystemCreationClassName=DCIM_ComputerSystem",
                           "-k JobArray=\"#{jid}\" -k StartTimeInterval=\"#{time}\"")
     return false unless output
 
@@ -120,7 +120,7 @@ class WSMAN
 
     # Some versions don't actually give a return code on success.
     if (t["SetupJobQueue_OUTPUT"]["ReturnValue"].instance_of? Hash)
-      return true, "nil value" 
+      return true, "nil value"
     end
 
     if t["SetupJobQueue_OUTPUT"]["ReturnValue"] != "0"
@@ -131,8 +131,8 @@ class WSMAN
   end
 
   def clear_all_jobs
-    output = self.command("invoke -a DeleteJobQueue", 
-                          "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/DCIM_JobService?CreationClassName=DCIM_JobService,Name=JobService,SystemName=Idrac,SystemCreationClassName=DCIM_ComputerSystem", 
+    output = self.command("invoke -a DeleteJobQueue",
+                          "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/DCIM_JobService?CreationClassName=DCIM_JobService,Name=JobService,SystemName=Idrac,SystemCreationClassName=DCIM_ComputerSystem",
                           "-m 256 -k JobID=\"JID_CLEARALL\"")
     return false unless output
 
@@ -144,14 +144,14 @@ class WSMAN
 
     # Some versions don't actually give a return code on success.
     if (t["DeleteJobQueue_OUTPUT"]["ReturnValue"].instance_of? Hash)
-      return true, "nil value" 
+      return true, "nil value"
     end
     ret = t["DeleteJobQueue_OUTPUT"]["ReturnValue"].to_i == 0 rescue false
     return ret, t["DeleteJobQueue_OUTPUT"]["Message"]
   end
 
   def get_job_status(jid)
-    output = self.command("get", 
+    output = self.command("get",
                           "http://schemas.dell.com/wbem/wscim/1/cim-schema/2/DCIM_LifecycleJob?InstanceID=#{jid}")
     return false unless output
 
@@ -162,7 +162,7 @@ class WSMAN
       return false, t["Fault"]["Reason"]["Text"]["content"]
     end
 
-    # Sometime the job will hang 
+    # Sometime the job will hang
     js = t["DCIM_LifecycleJob"]["JobStatus"]
     if js == "New"
       if t["DCIM_LifecycleJob"]["MessageID"] == "RED023"
@@ -176,7 +176,7 @@ class WSMAN
   end
 
   def is_RS_ready?
-    output = self.command("invoke -a GetRSStatus", 
+    output = self.command("invoke -a GetRSStatus",
                           "http://schemas.dell.com/wbem/wscim/1/cim-schema/2/root/dcim/DCIM_LCService?SystemCreationClassName=DCIM_ComputerSystem,CreationClassName=DCIM_LCService,SystemName=DCIM:ComputerSystem,Name=DCIM:LCService",
                           "-V")
     return false unless output
@@ -202,7 +202,6 @@ class WSMAN
     status = t["GetRSStatus_OUTPUT"]["Status"]
     return status == "Ready", status
   end
-
 end
 end
 end

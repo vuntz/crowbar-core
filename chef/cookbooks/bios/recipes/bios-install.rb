@@ -25,7 +25,7 @@ if (provisioner_server == nil)
     provisioner_server = "#{address}:#{web_port}"
     log("Provisioner server info is #{provisioner_server}")
     node[:crowbar_wall][:provisioner_server] = provisioner_server
-    node.save 
+    node.save
   else
     log("Provisioner server info could not be retrieved")
   end
@@ -40,42 +40,41 @@ product.strip!
 %w{bios bmc}.each do |t|
   next unless (node["dell_bios"]["updaters"][product][t] rescue nil)
   f = node["dell_bios"]["updaters"][product][t]
-  if f.include?('/')
+  if f.include?("/")
     directory "/tmp/#{f.split('/')[0..-2].join('/')}" do
       recursive true
     end
   end
   remote_file "/tmp/#{f}" do
     source "http://#{provisioner_server}/files/dell_bios/#{f}"
-    mode '0755'
+    mode "0755"
     action :create_if_missing
   end
 end
 
 bios_update "bmc" do
-  type            "bmc"
-  problem_file    problem_file
-  product         product
-  max_tries       node[:dell_bios][:max_tries]
+  type "bmc"
+  problem_file problem_file
+  product product
+  max_tries node[:dell_bios][:max_tries]
   only_if         { @@bmc_update_enable }
-  action   :update
+  action :update
 end
 
-
 bios_update "bios" do
-  type            "bios"
-  problem_file    problem_file
-  product         product
-  max_tries       node[:dell_bios][:max_tries]
+  type "bios"
+  problem_file problem_file
+  product product
+  max_tries node[:dell_bios][:max_tries]
   only_if         { @@bios_update_enable }
-  action   :update
+  action :update
 end
 
 bios_update "wsman" do
-  type           "wsman"
-  problem_file    problem_file
-  product         product
-  max_tries       node[:dell_bios][:max_tries]
+  type "wsman"
+  problem_file problem_file
+  product product
+  max_tries node[:dell_bios][:max_tries]
   only_if         { @@bios_update_enable }
-  action   :update
+  action :update
 end

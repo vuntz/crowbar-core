@@ -25,7 +25,7 @@ rescue
 end
 
 debug = node[:dell_bios][:debug]
-product = node[:dmi][:system][:product_name].gsub(/\s+/, '')
+product = node[:dmi][:system][:product_name].gsub(/\s+/, "")
 default_set = "bios-set-#{product}-default"
 bios_set = get_bag_item_safe(default_set, "bios defaults")
 bios_version = node[:dmi] && node[:dmi][:bios] && node[:dmi][:bios][:version]
@@ -51,7 +51,7 @@ else
   when "legacy","new_pec","unified_pec"
     # Run the statically linked version of setupbios on the ubuntu platform
     pgm_dir = "/opt/bios/setupbios"
-    ENV['SETUPBIOS_SETTINGS_PATH']=pgm_dir
+    ENV["SETUPBIOS_SETTINGS_PATH"]=pgm_dir
     pgmname = "#{pgm_dir}/alternate_version/setupbios.static"
   end
 
@@ -67,10 +67,10 @@ else
   end
 
   if bios_over.nil?
-    log("no role overide settings, setting to defaults" ) { level :warn}
+    log("no role overide settings, setting to defaults" ) { level :warn }
     values = bios_set["attributes"].dup
   else
-    log("using role overide settings from: #{setname}") { level :warn}
+    log("using role overide settings from: #{setname}") { level :warn }
     # WSMAN needs a deep merge!
     if style == "wsman"
       # overlay[fqdd][groups][attr_names] = values (value is a hash)
@@ -108,12 +108,12 @@ else
       }
     end
     bios_configure "wsman" do
-      type           "wsman"
-      product         node[:dmi][:system][:product_name]
-      max_tries       node[:dell_bios][:max_tries]
-      values          values
+      type "wsman"
+      product node[:dmi][:system][:product_name]
+      max_tries node[:dell_bios][:max_tries]
+      values values
       problem_file "/var/log/chef/hw-problem.log"
-      action   :configure
+      action :configure
     end
   when "unified_pec"
     need_reboot = false
@@ -136,11 +136,11 @@ else
     end
     # Get the current state of all the symbolic token settings.
     current_tokens = {}
-    IO.popen("#{pgmname} setting save",'r') do |f|
+    IO.popen("#{pgmname} setting save","r") do |f|
       f.each do |raw_line|
-        line = raw_line.gsub(/[#;].*/,'').strip.chomp
+        line = raw_line.gsub(/[#;].*/,"").strip.chomp
         next if line.empty?
-        name,val = line.split(':',2).map{|t|t.strip}
+        name,val = line.split(":",2).map{ |t|t.strip }
         current_tokens[name] = val
       end
     end
@@ -157,9 +157,9 @@ else
         symbolic_change_map[name][:tries] += 1
       else
         symbolic_change_map[name] = {
-          :current => current_tokens[name],
-          :desired => val,
-          :tries => 1
+          current: current_tokens[name],
+          desired: val,
+          tries: 1
         }
       end
       need_reboot = true
@@ -188,7 +188,7 @@ else
     node[:crowbar_wall][:dell_bios][:pec_symbolic_change_map] = symbolic_change_map
     node[:crowbar_wall][:dell_bios][:pec_raw_change_map] = raw_change_map
     if need_reboot
-      IO.popen("#{pgmname} list_tokens",'r') do |f|
+      IO.popen("#{pgmname} list_tokens","r") do |f|
         unless node[:crowbar_wall][:dell_bios][:initial_raw_tokens]
           node[:crowbar_wall][:dell_bios][:initial_raw_tokens] = f.readlines
         else

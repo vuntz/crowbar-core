@@ -14,30 +14,29 @@
 # limitations under the License.
 #
 
-require File.join(File.dirname(__FILE__), 'raid_data')
+require File.join(File.dirname(__FILE__), "raid_data")
 
 class Crowbar
 class RAID
 class LSI_MegaCli < Crowbar::RAID::Driver
-
   attr_accessor :controllers, :debug
 
   def initialize(node)
   end
 
-  CMD = '/opt/MegaRAID/MegaCli/MegaCli64'
+  CMD = "/opt/MegaRAID/MegaCli/MegaCli64"
   @@vol_re = /Virtual Drive:\s*(\d+)\s*\(Target Id:\s*(\d+)\)/
   @@disk_re = /PD:\s*(\d+)\s*Information/
   @@adapter_line = /^Adapter #(\d+)$/
   RAID_MAP = {
-    :RAID0 => "-r0",
-    :RAID1 => "-r1",
-    :RAID5 => "-r5",
-    :RAID6 => "-r6",
-    :RAID00 => "-r00",
-    :RAID10 => "-r10",
-    :RAID50 => "-r50",
-    :RAID60 => "-r60"
+    RAID0: "-r0",
+    RAID1: "-r1",
+    RAID5: "-r5",
+    RAID6: "-r6",
+    RAID00: "-r00",
+    RAID10: "-r10",
+    RAID50: "-r50",
+    RAID60: "-r60"
   }
   INV_CAP_MAP = {
     "RAID0" => :RAID0,
@@ -122,7 +121,7 @@ class LSI_MegaCli < Crowbar::RAID::Driver
         cmd << RAID_MAP[type]
         disk_cnt = disk_ids.length
         disk_cnt = disk_cnt -1 if disk_cnt % 2 >0  # can't use odd #.
-        span_cnt = disk_cnt/2 
+        span_cnt = disk_cnt/2
         (1..span_cnt).each { |x|
           cmd <<  "-array#{x}[#{disk_ids[0]}, #{disk_ids[1]} ]"
           disk_ids.shift
@@ -154,31 +153,31 @@ class LSI_MegaCli < Crowbar::RAID::Driver
       volume.members.each do |d|
         next unless d.vol_id
         text = ""
-        run_tool(0, nil, ["-CfgLdDel", "-L#{d.vol_id}", "-a#{volume.controller.controller_id}"]) 
+        run_tool(0, nil, ["-CfgLdDel", "-L#{d.vol_id}", "-a#{volume.controller.controller_id}"])
       end
     else
       text = ""
-      run_tool(0, nil, ["-CfgLdDel", "-L#{volume.vol_id}", "-a#{volume.controller.controller_id}"]) 
+      run_tool(0, nil, ["-CfgLdDel", "-L#{volume.vol_id}", "-a#{volume.controller.controller_id}"])
     end
   rescue
     log("delete returned: #{text}", :ERROR)
-    raise 
+    raise
   end
-      
+
   # Nic first is ignored
   def set_boot(controller, volume, nic_first = true)
-    #### set a bood drive. 
+    #### set a bood drive.
     ## - If there is any kind of volume info, pick first volume
     begin
       if volume and volume.raid_level != :JBOD
-        bootVol = volume.vol_id          
-        puts "Will use boot volume:#{bootVol}"                    
+        bootVol = volume.vol_id
+        puts "Will use boot volume:#{bootVol}"
         run_tool(0, nil, ["-adpBootDrive", "-set", "-l#{bootVol}", "-a#{controller.controller_id}"]) if (bootVol)
       elsif volume and volume.raid_level == :JBOD
         ## JBOD is made up of RAID0 members...volume IDs don't appear sorted
         ## Adding code to sort and pick lowest volume id as bootable drive
         sorted_ids = []
-        volume_ids = [] 
+        volume_ids = []
         bootVol    = ""
         if ((volume.members) and (!volume.members.empty?))
           bootVol = volume.members[0].vol_id if (volume.members[0].vol_id)
@@ -188,8 +187,8 @@ class LSI_MegaCli < Crowbar::RAID::Driver
           end
         end
         sorted_ids = volume_ids.sort! if ((volume_ids) and (!volume_ids.empty?))
-        bootVol = sorted_ids[0] if ((sorted_ids) and (!sorted_ids.empty?)) 
-        puts "Will use boot jbod fake vol id :#{bootVol}"                    
+        bootVol = sorted_ids[0] if ((sorted_ids) and (!sorted_ids.empty?))
+        puts "Will use boot jbod fake vol id :#{bootVol}"
         run_tool(0, nil, ["-adpBootDrive", "-set", "-l#{boot}", "-a#{controller.controller_id}"]) if (bootVol.length > 0)
       elsif !controller.disks.empty?
         d = controller.disks[0]
@@ -224,7 +223,7 @@ class LSI_MegaCli < Crowbar::RAID::Driver
     c.volumes.each do |v|
       del << v if v.raid_level == :RAID0 and v.members.length == 1
     end
-    del.each do |v| 
+    del.each do |v|
       # Save off the vol id on the disk
       v.members[0].vol_id = v.vol_id
       c.volumes.delete(v)
@@ -244,7 +243,7 @@ class LSI_MegaCli < Crowbar::RAID::Driver
   Parse a controller specific set of lines from -AdpAllInfo -aAll
   There is a wealth of info ignored because the other controllers
   don't have it.  One day....
-=end     
+=end
   CNTR_KEY_MAP = {
     "Product Name" => :product_name,
     "Device Id" => :device_id,
@@ -270,7 +269,7 @@ class LSI_MegaCli < Crowbar::RAID::Driver
     "Function Number" => :function
   }
   def parse_cntl_info(cid, lines)
-    c = Controller.new(:controller_id => cid)
+    c = Controller.new(controller_id: cid)
     c.driver = self
 
     begin
@@ -295,8 +294,7 @@ class LSI_MegaCli < Crowbar::RAID::Driver
 
         ## we know how to create jbod, by faking it ;)
     levels = c.supported_raid_levels
-    c.supported_raid_levels << :JBOD unless c.supported_raid_levels.count(:JBOD) >0  
-
+    c.supported_raid_levels << :JBOD unless c.supported_raid_levels.count(:JBOD) >0
 
     # Also /opt/MegaRAID/MegaCli/MegaCli64 -AdpGetPciInfo -a#{cid}
     lines = run_tool(0, nil, ["-AdpGetPciInfo", "-a#{cid}"])
@@ -317,21 +315,20 @@ class LSI_MegaCli < Crowbar::RAID::Driver
   end
 
 =begin
- On some systems, enclosure info is not avail and they report N/A 
- On those systems, drives should be identified using an empty string 
+ On some systems, enclosure info is not avail and they report N/A
+ On those systems, drives should be identified using an empty string
  for enclosure
 =end
 def clean_enclosure(s)
-  s = '' if s == 'N/A' #handle stupid 2100's enclosures.
-  s 
+  s = "" if s == "N/A" #handle stupid 2100's enclosures.
+  s
 end
-
 
 =begin
  Parse information about available pyhsical devices.
   The method expects to parse the output of:
   MegaCli64 -PDlist -aAll
-=end     
+=end
   DISK_KEY_MAP = {
     "Raw Size" => :size,
     "Enclosure Device ID" => :enclosure,
@@ -340,7 +337,7 @@ end
     "SAS Address(0)" => :sas_address,
     "Firmware state" => :status,
     "PD Type" => :protocol,
-    "Media Type" => :media_type,
+    "Media Type" => :media_type
   }
   def parse_dev_info(lines, controller)
     devs = []
@@ -351,7 +348,7 @@ end
 
       if line =~ /Enclosure Device ID:/
         key, enclosure = extract_value line
-        rd = Crowbar::RAID::RaidDisk.new                       
+        rd = Crowbar::RAID::RaidDisk.new
         rd.controller = controller
         devs << rd
         rd.enclosure = enclosure
@@ -366,8 +363,8 @@ end
         when :enclosure
           value = clean_enclosure(value)
           when :size
-            # sector count * 512 byte sector          
-            value = Integer(/.*\[(.*) .*\]/.match(value)[1]) * 512 
+            # sector count * 512 byte sector
+            value = Integer(/.*\[(.*) .*\]/.match(value)[1]) * 512
           when :model
             arr = value.split(" ")
             rd.set(:manufacturer, arr[0].strip) if arr[0]
@@ -386,35 +383,35 @@ end
     end while lines.length > 0
     return devs
   end
-  
+
 =begin
-  Break the output into "stanzas"- one for each volume, and 
-  pass the buck down to the volume parsing method.     
+  Break the output into "stanzas"- one for each volume, and
+  pass the buck down to the volume parsing method.
 
   The method expects the output of:
   MegaCli64 -ldpdinfo -aAll
 =end
   def parse_volumes(lines, controller)
-    vols = []    
+    vols = []
     txt = save = ""
     # find first volume
     skip_to_find lines, @@vol_re
     begin
       # find the next one, to "bracket"the volume
-      save = lines.shift if lines.length > 0 
+      save = lines.shift if lines.length > 0
       txt = skip_to_find lines, @@vol_re
-      next if txt.length ==0  # no more info          
-      vols << parse_vol_info([ save ] + txt, controller)
-    end while txt.length > 0   
+      next if txt.length ==0  # no more info
+      vols << parse_vol_info([save] + txt, controller)
+    end while txt.length > 0
     # the main RAID controller uses a JBOD "volume" to represent jbod
     # create a fake volume to capture the ID of the first drive (So we can)
 
     vols
   end
-  
+
 =begin
  Parse info about one volume
-=end  
+=end
   VOL_KEY_MAP = {
     "Name" => :vol_name,
     "State" => :status,
@@ -426,7 +423,7 @@ end
   }
   def parse_vol_info(lines, controller)
     skip_to_find lines, @@vol_re
-    return if lines.length == 0 and log("no more info") 
+    return if lines.length == 0 and log("no more info")
 
     rv = Crowbar::RAID::Volume.new
     rv.controller = controller
@@ -471,11 +468,11 @@ end
             case value
               when /Primary-0, Secondary-0/
                 value = :RAID0
-              when /Primary-1, Secondary-0/ 
+              when /Primary-1, Secondary-0/
                 value = (rv.span_depth and rv.span_depth > 1) ? :RAID10 : :RAID1
-              when /Primary-5, Secondary-0/ 
+              when /Primary-5, Secondary-0/
                 value = (rv.span_depth and rv.span_depth > 1) ? :RAID50 : :RAID5
-              when /Primary-6, Secondary-0/ 
+              when /Primary-6, Secondary-0/
                 value = (rv.span_depth and rv.span_depth > 1) ? :RAID60 : :RAID6
             end
         end
@@ -490,7 +487,7 @@ end
     begin
       line = lines.shift
 
-      enclosure = clean_enclosure($2) if line =~ /Enclosure Device (ID|value): (.*)/      
+      enclosure = clean_enclosure($2) if line =~ /Enclosure Device (ID|value): (.*)/
       slot = $1 if line =~ /Slot Number: (.*)/
       if slot and enclosure
         rd = nil
@@ -515,9 +512,9 @@ end
 
     log("found volume with #{rv.members.length} drives and #{rv.span_depth} spans ")
     rv
-  end    
-  
-  def run_tool(success, error, args, &block)    
+  end
+
+  def run_tool(success, error, args, &block)
     cmd = [CMD, *args]
     cmdline = cmd.join(" ")
     run_command(cmdline, success, error, &block)
@@ -525,7 +522,6 @@ end
 end # MEGACLI
 end # RAID
 end # Crowbar
-
 
 if __FILE__ == $0
   $in_chef=false

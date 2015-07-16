@@ -24,7 +24,6 @@ CHANGE_BOOT_ORDER_CMD = "ChangeBootOrderByInstanceID"
 
 class Crowbar
   class BIOS
-
 class WSMANAttributes
   def initialize(wsman)
     @wsman = wsman
@@ -36,7 +35,7 @@ class WSMANAttributes
     def initialize(type)
       self["Type"] = type
     end
-    
+
     def type
       self["Type"]
     end
@@ -115,20 +114,20 @@ class WSMANAttributes
     attr_reader :items
     attr_reader :fault
 
-    def initialize 
-      @ignore_list = [ "s:Header", "s:Envelope", "s:Body", "wsa:To", "wsa:Action", "wsa:RelatesTo", "wsa:MessageID",
-                       "wsen:EnumerateResponse", "wsman:Items", "wsen:EnumerationContext", "wsman:EndOfSequence" ]
-      @leaf_list = [ "AttributeName", "CurrentValue", "DefaultValue", "FQDD", "InstanceID", "IsReadOnly", "LowerBound",
-                     "PendingValue", "UpperBound", "MinLength", "MaxLength", "GroupID", "GroupDisplayName", 
+    def initialize
+      @ignore_list = ["s:Header", "s:Envelope", "s:Body", "wsa:To", "wsa:Action", "wsa:RelatesTo", "wsa:MessageID",
+                       "wsen:EnumerateResponse", "wsman:Items", "wsen:EnumerationContext", "wsman:EndOfSequence"]
+      @leaf_list = ["AttributeName", "CurrentValue", "DefaultValue", "FQDD", "InstanceID", "IsReadOnly", "LowerBound",
+                     "PendingValue", "UpperBound", "MinLength", "MaxLength", "GroupID", "GroupDisplayName",
                      "AttributeDisplayName", "Dependency", "DisplayOrder",
                      "ElementName", "Description", "Caption", "IsOrderedList",
                      "PossibleValuesDescription", "StringType", "ValueExpression",
-                     "PossibleValues", "Code", "Value", "Subcode", "Reason", "Detail", "FaultDetail", "Text" ]
-      @item_list = [ "Fault", "DCIM_BIOSinteger", "DCIM_BIOSEnumeration", "DCIM_BIOSString", 
+                     "PossibleValues", "Code", "Value", "Subcode", "Reason", "Detail", "FaultDetail", "Text"]
+      @item_list = ["Fault", "DCIM_BIOSinteger", "DCIM_BIOSEnumeration", "DCIM_BIOSString",
                      "DCIM_NICInteger", "DCIM_NICString", "DCIM_NICEnumeration",
                      "DCIM_RAIDInteger", "DCIM_RAIDString", "DCIM_RAIDEnumeration",
                      "DCIM_LCInteger", "DCIM_LCString", "DCIM_LCEnumeration",
-                     "DCIM_iDRACCardString", "DCIM_iDRACCardInteger", "DCIM_iDRACCardEnumeration" ]
+                     "DCIM_iDRACCardString", "DCIM_iDRACCardInteger", "DCIM_iDRACCardEnumeration"]
       @stack = []
       @items = []
       @fault = nil
@@ -323,8 +322,8 @@ class WSMANAttributes
 
     # Post the attribute update request.
     output = @wsman.command("invoke -a #{method}",svc_class_uri, "-J /tmp/request.xml")
-    puts "Debug: set attr failed no output" unless output 
-    return [ false, "Failed to update attributes" ] unless output 
+    puts "Debug: set attr failed no output" unless output
+    return [false, "Failed to update attributes"] unless output
 
     hash = XmlSimple.xml_in(output, "ForceArray" => false)
     t = hash["Body"]["#{method}_OUTPUT"] rescue nil
@@ -333,19 +332,19 @@ class WSMANAttributes
 
     if class_name == "DCIM_iDRACCardService"
       if t.nil? or t["ReturnValue"].to_i != 4096
-        puts "Set Attr (iDrac): return failed: #{(t.nil? ? "Unknown" : t["Message"])}" 
-        return [ false, (t.nil? ? "Unknown" : t["Message"]) ]
+        puts "Set Attr (iDrac): return failed: #{(t.nil? ? "Unknown" : t["Message"])}"
+        return [false, (t.nil? ? "Unknown" : t["Message"])]
       end
-      return [ true, false ]
+      return [true, false]
     end
 
     if t.nil? or t["ReturnValue"].to_i != 0
-      puts "Set Attr: return failed: #{(t.nil? ? "Unknown" : t["Message"])}" 
-      return [ false, (t.nil? ? "Unknown" : t["Message"]) ]
+      puts "Set Attr: return failed: #{(t.nil? ? "Unknown" : t["Message"])}"
+      return [false, (t.nil? ? "Unknown" : t["Message"])]
     end
 
     reboot = reboot || (t["RebootRequired"] == "Yes")
- 
+
     ## With new set_boot restructuring it's possible we could hit the   ##
     ## BIOS barclamp and reboot into UEFI mode without hitting the set  ##
     ## boot recipe...To prevent this we do a minimal reordering of UEFI ##
@@ -426,8 +425,8 @@ class WSMANAttributes
       # Post Targeted Config Job
       method = "CreateConfigJob"
       output = @wsman.command("invoke -a #{method}",svc_class_uri,"")
-      puts "Debug: set attr LC job failed no output" unless output 
-      return [ false, "Failed to create LC update job" ] unless output 
+      puts "Debug: set attr LC job failed no output" unless output
+      return [false, "Failed to create LC update job"] unless output
 
       hash = XmlSimple.xml_in(output, "ForceArray" => false)
       t = hash["Body"]["#{method}_OUTPUT"]
@@ -435,8 +434,8 @@ class WSMANAttributes
       puts "Debug: config LC job hash = #{hash.inspect}"
 
       if t["ReturnValue"].to_i != 4096
-        puts "Set Attr: return failed LC config job: #{(t.nil? ? "Unknown" : t["Message"])}" 
-        return [ false, t["Message"] ]
+        puts "Set Attr: return failed LC config job: #{(t.nil? ? "Unknown" : t["Message"])}"
+        return [false, t["Message"]]
       end
       # Always reboot on LC changes
       reboot = true
@@ -444,8 +443,8 @@ class WSMANAttributes
       # Post Targeted Config Job
       method = "CreateTargetedConfigJob"
       output = @wsman.command("invoke -a #{method}", svc_class_uri,"-k Target=#{fqdd} -k ScheduledStartTime=\"TIME_NOW\"")
-      puts "Debug: set attr job failed no output" unless output 
-      return [ false, "Failed to create update job" ] unless output 
+      puts "Debug: set attr job failed no output" unless output
+      return [false, "Failed to create update job"] unless output
 
       hash = XmlSimple.xml_in(output, "ForceArray" => false)
       t = hash["Body"]["#{method}_OUTPUT"]
@@ -453,14 +452,14 @@ class WSMANAttributes
       puts "Debug: config job hash = #{hash.inspect}"
 
       if t["ReturnValue"].to_i != 4096
-        puts "Set Attr: return failed config job: #{(t.nil? ? "Unknown" : t["Message"])}" 
-        return [ false, t["Message"] ]
+        puts "Set Attr: return failed config job: #{(t.nil? ? "Unknown" : t["Message"])}"
+        return [false, t["Message"]]
       else
         job_id = @wsman.get_job_id(t["Job"])
         puts "Targeted config job ID is #{job_id}"
       end
     end
-    return [ true, reboot ]
+    return [true, reboot]
   end
 
   # Helper function to handle wildcarding in the attributes file
@@ -530,15 +529,15 @@ class WSMANAttributes
       next unless new_val # Skip items that don't have a new value
 
       if item.is_string
-        return [ false, "Invalid #{new_val} for #{item.instance_id}" ] if ((new_val.length > item.max_length) or (new_val.length < item.min_length))
+        return [false, "Invalid #{new_val} for #{item.instance_id}"] if ((new_val.length > item.max_length) or (new_val.length < item.min_length))
       elsif item.is_integer
         a = new_val.to_i rescue "Failed"
-        return [ false, "Not an number (#{new_val}) for #{item.instance_id}" ] if a == "Failed"
-        return [ false, "Invalid #{new_val} for #{item.instance_id}" ] if ((a > item.upper_bound) or (a < item.lower_bound))
+        return [false, "Not an number (#{new_val}) for #{item.instance_id}"] if a == "Failed"
+        return [false, "Invalid #{new_val} for #{item.instance_id}"] if ((a > item.upper_bound) or (a < item.lower_bound))
       elsif item.is_enumeration
-        return [ false, "Invalid #{new_val} for #{item.instance_id}" ] unless item.possible_values.include? new_val
+        return [false, "Invalid #{new_val} for #{item.instance_id}"] unless item.possible_values.include? new_val
       else
-        return [ false, "Unknown type of item" ]
+        return [false, "Unknown type of item"]
       end
 
       if new_val != item.current_value
@@ -571,9 +570,7 @@ class WSMANAttributes
     end
     [!error, reboot]
   end
-
 end # WSMAN_Attributes
-
 end # BIOS
 end # Crowbar
 
@@ -616,11 +613,11 @@ def test_build_config_json(opts)
     if json["attributes"][fqdd][group_id][item.attribute_name]
       puts "Delete #{fqdd}.#{group_id}.#{item.attribute_name}" if json["attributes"][fqdd][group_id][item.attribute_name]["value"] != item.current_value
     end
-    json["attributes"][fqdd][group_id][item.attribute_name] = { 
-      "instance_id" => item.instance_id, 
-      "value" => item.current_value, 
-      "attr_name" => item.attribute_name, 
-      "GroupID" => item.group_id, 
+    json["attributes"][fqdd][group_id][item.attribute_name] = {
+      "instance_id" => item.instance_id,
+      "value" => item.current_value,
+      "attr_name" => item.attribute_name,
+      "GroupID" => item.group_id,
       "DefaultValue" => item.default_value
     }
     # out = "#{item.instance_id} #{item.type} #{item.is_read_only} \"#{item.current_value}\" "
@@ -638,8 +635,8 @@ def test_set_attributes(attrs, opts)
   wsman_attributes = Crowbar::BIOS::WSMANAttributes.new(wsman)
 
   node = {}
-  ret, message = wsman_attributes.update_attributes(attrs, { :node => node })
-  [ ret, message, node ]
+  ret, message = wsman_attributes.update_attributes(attrs, { node: node })
+  [ret, message, node]
 end
 
 

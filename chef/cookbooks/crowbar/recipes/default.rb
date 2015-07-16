@@ -135,7 +135,7 @@ user "crowbar" do
   home crowbar_home
   password "$6$afAL.34B$T2WR6zycEe2q3DktVtbH2orOroblhR6uCdo5n3jxLsm47PBm9lwygTbv3AjcmGDnvlh0y83u2yprET8g9/mve."
   shell "/bin/bash"
-  supports :manage_home=>true
+  supports manage_home: true
   not_if "egrep -qi '^crowbar:' /etc/passwd"
 end
 
@@ -203,7 +203,7 @@ cookbook_file "#{crowbar_home}/.chef/knife.rb" do
 end
 
 bash "Add crowbar chef client" do
-  environment({'EDITOR' => '/bin/true', 'HOME' => '/root'})
+  environment({"EDITOR" => "/bin/true", "HOME" => "/root"})
   code "knife client create crowbar -a --file /opt/dell/crowbar_framework/config/client.pem -u chef-webui -k /etc/chef/webui.pem "
   not_if "export HOME=/root;knife client list -u crowbar -k /opt/dell/crowbar_framework/config/client.pem"
 end
@@ -240,7 +240,7 @@ end
 directory "/var/run/crowbar" do
   owner "crowbar"
   group "crowbar"
-  mode  "0755"
+  mode "0755"
   action :create
   only_if { node[:platform] == "ubuntu" }
 end
@@ -260,7 +260,6 @@ directory "#{logdir}/chef-client" do
   action :create
 end
 
-
 unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"]["realm"].nil?
   web_port = node["crowbar"]["web_port"]
   realm = node["crowbar"]["realm"]
@@ -275,7 +274,7 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
 
   template "/opt/dell/crowbar_framework/htdigest" do
     source "htdigest.erb"
-    variables(:users => users, :realm => realm)
+    variables(users: users, realm: realm)
     owner "crowbar"
     owner "crowbar"
     mode "0644"
@@ -302,14 +301,14 @@ template "/opt/dell/crowbar_framework/rainbows.cfg" do
   owner "crowbar"
   group "crowbar"
   mode "0644"
-  variables(:web_host => "0.0.0.0",
-            :web_port => node["crowbar"]["web_port"] || 3000,
-            :user => "crowbar",
-            :concurrency_model => "EventMachine",
-            :group => "crowbar",
-            :logdir => logdir,
-            :logname => "production",
-            :app_location => "/opt/dell/crowbar_framework")
+  variables(web_host: "0.0.0.0",
+            web_port: node["crowbar"]["web_port"] || 3000,
+            user: "crowbar",
+            concurrency_model: "EventMachine",
+            group: "crowbar",
+            logdir: logdir,
+            logname: "production",
+            app_location: "/opt/dell/crowbar_framework")
 end
 
 template "/opt/dell/crowbar_framework/rainbows-dev.cfg" do
@@ -317,14 +316,14 @@ template "/opt/dell/crowbar_framework/rainbows-dev.cfg" do
   owner "crowbar"
   group "crowbar"
   mode "0644"
-  variables(:web_host => "0.0.0.0",
-            :web_port => node["crowbar"]["web_port"] || 3000,
-            :user => "crowbar",
-            :concurrency_model => "EventMachine",
-            :group => "crowbar",
-            :logdir => logdir,
-            :logname => "development",
-            :app_location => "/opt/dell/crowbar_framework")
+  variables(web_host: "0.0.0.0",
+            web_port: node["crowbar"]["web_port"] || 3000,
+            user: "crowbar",
+            concurrency_model: "EventMachine",
+            group: "crowbar",
+            logdir: logdir,
+            logname: "development",
+            app_location: "/opt/dell/crowbar_framework")
 end
 
 if node[:platform] != "suse"
@@ -338,7 +337,7 @@ if node[:platform] != "suse"
 
   template "/etc/bluepill/crowbar-webserver.pill" do
     source "crowbar-webserver.pill.erb"
-    variables(:logdir => logdir, :crowbar_home => crowbar_home)
+    variables(logdir: logdir, crowbar_home: crowbar_home)
   end
 
   bluepill_service "crowbar-webserver" do
@@ -381,11 +380,10 @@ else
   end
 end
 
-
 # The below code swiped from:
 # https://github.com/opscode-cookbooks/chef-server/blob/chef10/recipes/default.rb
 # It will automaticaly compact the couchdb database when it gets too large.
-require 'open-uri'
+require "open-uri"
 
 http_request "compact chef couchDB" do
   action :post
@@ -401,7 +399,6 @@ http_request "compact chef couchDB" do
 end
 
 %w(nodes roles registrations clients data_bags data_bag_items users checksums cookbooks sandboxes environments id_map).each do |view|
-
   http_request "compact chef couchDB view #{view}" do
     action :post
     url "#{Chef::Config[:couchdb_url]}/chef/_compact/#{view}"
@@ -414,5 +411,4 @@ end
       end
     end
   end
-
 end

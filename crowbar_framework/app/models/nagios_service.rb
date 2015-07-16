@@ -16,7 +16,6 @@
 #
 
 class NagiosService < ServiceObject
-
   def initialize(thelogger)
     @bc_name = "nagios"
     @logger = thelogger
@@ -47,7 +46,7 @@ class NagiosService < ServiceObject
 
     ## all good and fine, but we're not officially suporting HW monitoring for now..
     enab_raid = enab_ipmi = false
-    
+
     base["attributes"]["nagios"]["monitor_raid"] = enab_raid
     base["attributes"]["nagios"]["monitor_ipmi"] = enab_ipmi
 
@@ -86,7 +85,7 @@ class NagiosService < ServiceObject
 
         # Get the server IP address
         server_ip = nil
-        [ "nagios-server" ].each do |element|
+        ["nagios-server"].each do |element|
           tnodes = role.override_attributes["nagios"]["elements"][element]
           next if tnodes.nil? or tnodes.empty?
           tnodes.each do |n|
@@ -107,19 +106,18 @@ class NagiosService < ServiceObject
           node.crowbar["crowbar"]["links"] = {} if node.crowbar["crowbar"]["links"].nil?
           node.crowbar["crowbar"]["links"]["Nagios"] = "http://#{server_ip}/nagios3/cgi-bin/extinfo.cgi?type=1&host=#{node.shortname}"
           node.save
-        end 
+        end
       end
 
       @logger.debug("Nagios transition: leaving from discovered state for #{name} for #{state}")
-      a = [200, NodeObject.find_node_by_name(name).to_hash ] if result
+      a = [200, NodeObject.find_node_by_name(name).to_hash] if result
       a = [400, "Failed to add role to node"] unless result
       return a
     end
 
     @logger.debug("Nagios transition: leaving for #{name} for #{state}")
-    [200, NodeObject.find_node_by_name(name).to_hash ]
+    [200, NodeObject.find_node_by_name(name).to_hash]
   end
-
 end
 
 

@@ -14,11 +14,10 @@
 # limitations under the License.
 #
 
-
 include_recipe "utils"
 
 raid_enable = node[:dell_raid][:enable] & node.platform_family == "redhat" & CrowbarHelper.is_admin?(node)
-log("BEGIN raid-setboot enabled=#{raid_enable}") {level :info}
+log("BEGIN raid-setboot enabled=#{raid_enable}") { level :info }
 
 config_name = node[:crowbar][:hardware][:raid_set] rescue config_name = "JBODOnly"
 config_name ="raid-#{config_name}"
@@ -32,11 +31,11 @@ begin
 
   raid_raid_config "lsi-raid-boot" do
     config config["config"]
-    debug_flag   node[:raid][:debug]
+    debug_flag node[:raid][:debug]
     nic_first node[:raid][:nic_first]
-    action [ :set_boot ]
+    action [:set_boot]
     problem_file "/var/log/chef/hw-problem.log"
   end
   node.save
 end if raid_enable and !config.nil? and !config.empty?
-log("END raid-setboot") {level :info}
+log("END raid-setboot") { level :info }

@@ -17,7 +17,7 @@
 =begin
 This utility read the set of available tokens on the machine it's running on, and then tests the value of each (set/unset).
 
-It is intended to "discover" the correct Token for a given BIOS setting. 
+It is intended to "discover" the correct Token for a given BIOS setting.
 The procude is:
 - set the BIOS value to a setting (via GUI)
 - login, and dump the current tokens to a file (before)
@@ -25,7 +25,6 @@ The procude is:
 - set the BIOS value to a different setting (via GUI)
 - loing and dump the settings to (after)
 - diff the 2 files to see what changed.
-
 
 =end
 t_lst = %x{/usr/sbin/setupbios list_tokens}
@@ -35,10 +34,10 @@ t_lst.each { |x|
   tokens << sp[6]
 }
 
-tokens.each { |t| 
+tokens.each { |t|
   cmd = "/usr/sbin/setupbios test #{t}"
   val = %x{ #{cmd} }
-  puts "t: #{t} #{val}"  
+  puts "t: #{t} #{val}"
 }
 
 

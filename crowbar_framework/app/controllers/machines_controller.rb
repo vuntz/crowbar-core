@@ -21,26 +21,26 @@ class MachinesController < BarclampController
   before_filter :set_cloud_domain
 
   before_filter :load_machine_or_render_not_found,
-    :only => [
-      :show,
-      :role,
-      :rename,
-      :identify,
-      :delete,
-      :reinstall,
-      :update,
-      :reset,
-      :shutdown,
-      :reboot,
-      :poweron,
-      :powercycle,
-      :poweroff,
-      :allocate
-    ]
+                only: [
+                  :show,
+                  :role,
+                  :rename,
+                  :identify,
+                  :delete,
+                  :reinstall,
+                  :update,
+                  :reset,
+                  :shutdown,
+                  :reboot,
+                  :poweron,
+                  :powercycle,
+                  :poweroff,
+                  :allocate
+                ]
 
   rescue_from StandardError do |exception|
     log_exception exception
-    render :json => { :error => exception.message }, :status => 500
+    render json: { error: exception.message }, status: 500
   end
 
   add_help(:index)
@@ -51,20 +51,20 @@ class MachinesController < BarclampController
 
     @nodes = NodeObject.find_all_nodes.map do |node|
       {
-        :name => node.name,
-        :alias => node.alias
+        name: node.name,
+        alias: node.alias
       }
     end
 
     respond_to do |format|
-      format.json { render :json => { :nodes => @nodes }, :status => 200 }
+      format.json { render json: { nodes: @nodes }, status: 200 }
     end
   end
 
   add_help(:show, [:id])
   def show
     respond_to do |format|
-      format.json { render :json => @machine.to_hash }
+      format.json { render json: @machine.to_hash }
     end
   end
 

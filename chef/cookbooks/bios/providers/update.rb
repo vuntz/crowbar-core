@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-require 'json'
-require 'chef/shell_out'
+require "json"
+require "chef/shell_out"
 
 def check_avail(update,product,type)
   ret = nil
@@ -31,7 +31,7 @@ end
 
 # return true if the update should be run
 def check_version(type,cmd)
-  ###### 
+  ######
   # Version info is reported in format similar to this:
   # Software application name: BIOS
   # Package version: 1.64
@@ -79,7 +79,7 @@ end
 
 def set_count(type, val)
   c_name = cnt_name(type)
-  c = node["crowbar_wall"]["track"][c_name] 
+  c = node["crowbar_wall"]["track"][c_name]
   node["crowbar_wall"]["track"][c_name] = val
   node.save
   return val
@@ -87,7 +87,7 @@ end
 
 def up_count(type)
   c_name = cnt_name(type)
-  c = node["crowbar_wall"]["track"][c_name] 
+  c = node["crowbar_wall"]["track"][c_name]
   node["crowbar_wall"]["track"][c_name] = c+1
   node.save
   return c+1
@@ -97,14 +97,14 @@ def can_try_again(type, max)
   count = get_count(type)
   Chef::Log.warn("Max allowed update attempts : #{max}")
   try = (count < max)
-  Chef::Log.warn("Attempts to update #{type} so far: #{count} will #{ try ? "" : "not"}try again")  
+  Chef::Log.warn("Attempts to update #{type} so far: #{count} will #{ try ? "" : "not"}try again")
   report_problem("Exceeded attempts to update #{type}, tried #{count} times") unless try
   return try
 end
 
 def do_update(type,cmd)
   Chef::Log.info("Trying update: #{cmd}")
-  cmd = Chef::ShellOut.new("#{cmd} -q ", :timeout =>900)
+  cmd = Chef::ShellOut.new("#{cmd} -q ", timeout: 900)
   cmd.run_command
   Chef::Log.info("results: exit #{cmd.exitstatus}, output: #{cmd.stdout}")
   begin
@@ -120,8 +120,8 @@ def do_update(type,cmd)
   case cmd.exitstatus
   when 0,2
     begin
-      %x{reboot && sleep 120} 
-    rescue  
+      %x{reboot && sleep 120}
+    rescue
       Chef::Log.info("rebooting")
     end
   else
@@ -142,7 +142,7 @@ end
 #
 def wsman_update(product)
   # Get the provisioner IP.
-  require 'wsman'
+  require "wsman"
   provisioners = search(:node, "roles:provisioner-server")
   provisioner = provisioners[0] if provisioners
   web_port = provisioner["provisioner"]["web_port"]
@@ -160,13 +160,13 @@ def wsman_update(product)
   ip = node["crowbar_wall"]["ipmi"]["address"]
   user = node["ipmi"]["bmc_user"] rescue "crowbar"
   password = node["ipmi"]["bmc_password"] rescue "crowbar"
-  opts = { :prov_ip => address, :prov_port => web_port,
-           :user => user, :password => password, 
-           :host => ip, :port => 443, 
-           :debug_time => false }
+  opts = { prov_ip: address, prov_port: web_port,
+           user: user, password: password,
+           host: ip, port: 443,
+           debug_time: false }
 
   system("wget -q http://#{opts[:prov_ip]}:#{opts[:prov_port]}/files/wsman/supported.json -O /tmp/supported.json")
-  jsondata = ::File.read('/tmp/supported.json')
+  jsondata = ::File.read("/tmp/supported.json")
   data = JSON.parse(jsondata)
   unless data
     Chef::Log.error("WSMAN failed to get supported.json file: #{product}")
@@ -276,8 +276,8 @@ def wsman_update(product)
   if reboot
     Chef::Log.info("rebooting")
     begin
-      %x{reboot && sleep 120} 
-    rescue  
+      %x{reboot && sleep 120}
+    rescue
       Chef::Log.info("reboot call failed")
     end
   end
