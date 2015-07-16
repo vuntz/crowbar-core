@@ -1,0 +1,9 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
+
+  .panel-body
+    = boolean_field :bios_setup_enable
+    = boolean_field :bios_update_enable
+    = boolean_field :bmc_update_enable
+    = boolean_field :debug
