@@ -14,8 +14,8 @@
 #
 
 rpcService="portmap"
-case node[:platform]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   package "nfs-common"
   package "nfs-kernel-server"
 
@@ -40,8 +40,7 @@ when "ubuntu","debian"
       command "chmod 755 /etc/init.d/nfs-kernel-server"
     end
   end
-
-when "centos","redhat","suse"
+when "rhel", "suse"
   package "nfs-utils"
   if node[:platform_version].to_f >= 6 || node[:platform] == "suse"
     rpcService="rpcbind"
@@ -65,8 +64,8 @@ end
 end
 
 service "nfs-kernel-server" do
-  service_name "nfs" if node[:platform] =~ /^(redhat|centos)$/
-  service_name "nfsserver" if node[:platform] == "suse"
+  service_name "nfs" if node[:platform_family] == "rhel"
+  service_name "nfsserver" if node[:platform_family] == "suse"
   supports restart: true, status: true, reload: true
   running true
   enabled true
