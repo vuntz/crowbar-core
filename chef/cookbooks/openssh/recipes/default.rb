@@ -37,15 +37,16 @@ service "ssh" do
   else
     service_name "ssh"
   end
-  supports value_for_platform_family(
-    "debian" => { "default" => [:restart, :reload, :status] },
-    "rhel" => { "default" => [:restart, :reload, :status] },
-    "fedora" => { "default" => [:restart, :reload, :status] },
-    "arch" => { "default" => [:restart] },
-    "default" => { "default" => [:restart, :reload] }
-  )
   if node[:platform] == "ubuntu" && node[:platform_version].to_f <= 8.04
     supports [:restart, :reload]
+  else
+    supports value_for_platform_family(
+      "debian" => { "default" => [:restart, :reload, :status] },
+      "rhel" => { "default" => [:restart, :reload, :status] },
+      "fedora" => { "default" => [:restart, :reload, :status] },
+      "arch" => { "default" => [:restart] },
+      "default" => { "default" => [:restart, :reload] }
+    )
   end
   action [:enable, :start]
 end
