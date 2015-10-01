@@ -91,7 +91,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
       end # block
     end # ruby_block
 
-  end # platform suse block
+  end # platform_family suse block
 
   # handle case where there is a reboot needed from a previous run
   if node[:updater][:do_reboot] and node[:updater][:need_reboot]
