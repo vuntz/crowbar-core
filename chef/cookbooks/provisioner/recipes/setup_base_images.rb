@@ -47,7 +47,7 @@ if File.exists? pxecfg_default
   append_line = IO.readlines(pxecfg_default).detect{ |l| /APPEND/i =~ l }
   if append_line
     append_line = append_line.strip.gsub(/(^APPEND |initrd=[^ ]+|console=[^ ]+|rhgb|quiet|crowbar\.[^ ]+)/i,"").strip
-  elsif node[:platform] != "suse"
+  elsif node[:platform_family] != "suse"
     append_line = "root=/sledgehammer.iso rootfstype=iso9660 rootflags=loop"
   end
 end
@@ -101,7 +101,7 @@ end
 # UEFI config
 use_elilo = true
 
-if node[:platform] != "suse"
+if node[:platform_family] != "suse"
   bash "Install elilo as UEFI netboot loader" do
     code <<EOC
 cd #{uefi_dir}
@@ -114,7 +114,7 @@ EOC
     not_if "test -f '#{uefi_dir}/bootx64.efi'"
   end
 else
-  if node["platform_version"].to_f < 12.0
+  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     package "elilo"
 
     bash "Install bootx64.efi" do
@@ -162,7 +162,7 @@ if use_elilo
   end
 end
 
-if node[:platform] == "suse"
+if node[:platform_family] == "suse"
 
   include_recipe "apache2"
 
@@ -180,8 +180,8 @@ else
 
   include_recipe "bluepill"
 
-  case node.platform
-  when "ubuntu","debian"
+  case node[:platform_family]
+  when "debian"
     package "nginx-light"
   else
     package "nginx"
@@ -225,14 +225,14 @@ end
 end # !suse
 
 # Set up the TFTP server as well.
-case node[:platform]
-when "ubuntu", "debian"
+case node[:platform_family]
+when "debian"
   package "tftpd-hpa"
   bash "stop ubuntu tftpd" do
     code "service tftpd-hpa stop; killall in.tftpd; rm /etc/init/tftpd-hpa.conf"
     only_if "test -f /etc/init/tftpd-hpa.conf"
   end
-when "redhat","centos"
+when "rhel"
   package "tftp-server"
 when "suse"
   package "tftp"
@@ -255,7 +255,7 @@ cookbook_file "/etc/tftpd.conf" do
   source "tftpd.conf"
 end
 
-if node[:platform] == "suse"
+if node[:platform_family] == "suse"
   service "tftp" do
     # just enable, don't start (xinetd takes care of it)
     enabled node[:provisioner][:enable_pxe] ? true : false
