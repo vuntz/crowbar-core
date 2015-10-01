@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-case node[:platform]
-when "debian","ubuntu", "gentoo"
+case node[:platform_family]
+when "debian", "gentoo"
   execute "start-runsvdir" do
     command value_for_platform(
       "debian" => { "default" => "runsvdir-start" },
@@ -43,7 +43,7 @@ when "debian","ubuntu", "gentoo"
 
   package "runit" do
     action :install
-    if platform?("ubuntu", "debian")
+    if platform_family?("debian")
       response_file "runit.seed"
     end
     notifies value_for_platform(
