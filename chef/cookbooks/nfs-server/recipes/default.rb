@@ -40,11 +40,14 @@ when "debian"
       command "chmod 755 /etc/init.d/nfs-kernel-server"
     end
   end
-when "rhel", "suse"
+when "rhel"
   package "nfs-utils"
-  if node[:platform_version].to_f >= 6 || node[:platform] == "suse"
+  if node[:platform_version].to_f >= 6
     rpcService="rpcbind"
   end
+when "suse"
+  package "nfs-utils"
+  rpcService="rpcbind"
 end
 
 package rpcService
