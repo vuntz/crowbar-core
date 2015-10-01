@@ -35,7 +35,7 @@ when "debian"
     libshadow-ruby1.8
     markdown
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "smbclient"
   end
 when "rhel"
@@ -46,7 +46,7 @@ when "rhel"
     sqlite-devel
     python-markdown
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "samba-client"
   end
 when "suse"
@@ -80,7 +80,7 @@ when "suse"
     ruby2.1-rubygem-syslogger
     ruby2.1-rubygem-yaml_db
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "samba-client"
   end
 end
