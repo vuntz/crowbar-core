@@ -20,13 +20,9 @@ include_recipe "utils"
 
 unless node[:platform_family] == "windows" || ::File.exists?("/usr/sbin/ipmitool") || ::File.exists?("/usr/bin/ipmitool")
   package "ipmitool" do
-    case node[:platform_family]
-    when "debian", "suse"
-      package_name "ipmitool"
-    when "rhel"
+    if node[:platform_family] == "rhel"
       package_name "OpenIPMI-tools"
     end
-    action :install
   end
 end
 
