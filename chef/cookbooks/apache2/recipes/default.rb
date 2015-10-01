@@ -152,6 +152,8 @@ unless node[:platform_family] == "suse"
       path "#{node[:apache][:dir]}/conf/httpd.conf"
     when "debian"
       path "#{node[:apache][:dir]}/apache2.conf"
+    when "suse"
+      path "#{node[:apache][:dir]}/httpd.conf"
     end
     source "apache2.conf.erb"
     owner "root"
