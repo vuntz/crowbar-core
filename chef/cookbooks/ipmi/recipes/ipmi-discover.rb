@@ -18,12 +18,12 @@
 
 include_recipe "utils"
 
-unless node[:platform] == "windows" or ::File.exists?("/usr/sbin/ipmitool") or ::File.exists?("/usr/bin/ipmitool")
+unless node[:platform_family] == "windows" || ::File.exists?("/usr/sbin/ipmitool") || ::File.exists?("/usr/bin/ipmitool")
   package "ipmitool" do
-    case node[:platform]
-    when "ubuntu","debian","suse"
+    case node[:platform_family]
+    when "debian", "suse"
       package_name "ipmitool"
-    when "redhat","centos"
+    when "rhel"
       package_name "OpenIPMI-tools"
     end
     action :install
@@ -45,7 +45,7 @@ node.set["crowbar_wall"]["status"] = {} unless node["crowbar_wall"]["status"]
 node.set["crowbar_wall"]["status"]["ipmi"] = {} unless node["crowbar_wall"]["status"]["ipmi"]
 node.save
 
-if node[:platform] == "windows"
+if node[:platform_family] == "windows"
     node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Unsupported platform - turning off ipmi for this node"]
     node.set[:ipmi][:bmc_enable] = false
     node.save
@@ -63,8 +63,8 @@ elsif node[:ipmi][:bmc_enable]
       if unsupported.member?(node[:dmi][:system][:product_name])
         return
       end
-      case node[:platform]
-      when "ubuntu","debian","suse"
+      case node[:platform_family]
+      when "debian", "suse"
         %x{modprobe ipmi_si; sleep 10}
       end
       %x{modprobe ipmi_devintf ; sleep 15}
@@ -98,8 +98,7 @@ elsif node[:ipmi][:bmc_enable]
         end
       end
       node.save
-      case node[:platform]
-      when "ubuntu","debian"
+      if node[:platform_family] == "debian"
         %x{rmmod ipmi_si}
       end
       %x{rmmod ipmi_devintf ; rmmod ipmi_msghandler}
