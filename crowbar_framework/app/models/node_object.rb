@@ -146,7 +146,9 @@ class NodeObject < ChefObject
           }
 
           platforms[arch] = available_oses.select { |p|
-            provisioner["provisioner"]["available_oses"][p][arch]["disabled"]
+            # Only allow one platform for SUSE Enterprise Storage
+            provisioner["provisioner"]["available_oses"][p][arch]["disabled"] ||
+              Crowbar::Product::is_ses? ? p != Crowbar::Product::ses_platform : false
           }
         end
 
