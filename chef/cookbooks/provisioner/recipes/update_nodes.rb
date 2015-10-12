@@ -126,7 +126,7 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile,uefifile].each do |f|
+      [pxefile,uefifile,powernvfile].each do |f|
         file f do
           action :delete
         end unless f.nil?
@@ -174,7 +174,7 @@ if not nodes.nil? and not nodes.empty?
         node_cfg_dir="#{tftproot}/nodes/#{mnode[:fqdn]}"
         node_url="#{provisioner_web}/nodes/#{mnode[:fqdn]}"
         os_url="#{provisioner_web}/#{os}"
-        install_url="#{os_url}/install"
+        install_url="#{os_url}/#{arch}/install"
 
         directory node_cfg_dir do
           action :create

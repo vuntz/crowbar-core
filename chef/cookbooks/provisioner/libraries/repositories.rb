@@ -156,18 +156,18 @@ class Provisioner
       # This returns a hash containing the data about the repos that must be
       # used on nodes; optional repos (such as HA) will only be returned if
       # they can be used.
-      def get_repos(provisioner_server_node, platform, version)
+      def get_repos(provisioner_server_node, platform, version, arch)
         admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
         web_port = provisioner_server_node[:provisioner][:web_port]
         provisioner_web = "http://#{admin_ip}:#{web_port}"
-        default_repos_url = "#{provisioner_web}/suse-#{version}/repos"
+        default_repos_url = "#{provisioner_web}/suse-#{version}/#{arch}/repos"
 
         repos = Mash.new
 
         case platform
         when "suse"
           repos = Mash.new
-          repos_from_attrs = suse_get_repos_from_attributes(provisioner_server_node,platform,version)
+          repos_from_attrs = suse_get_repos_from_attributes(provisioner_server_node, platform, version, arch)
 
           case version
           when "11.3"
