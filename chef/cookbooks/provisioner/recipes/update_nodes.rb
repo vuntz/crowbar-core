@@ -339,8 +339,8 @@ if not nodes.nil? and not nodes.empty?
             source t[:src]
             variables(append_line: "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}",
                       install_name: new_group,
-                      initrd: "initrd0.img",
-                      kernel: "vmlinuz0")
+                      initrd: "../initrd0.img",
+                      kernel: "../vmlinuz0")
           end unless t[:file].nil?
         end
       end
