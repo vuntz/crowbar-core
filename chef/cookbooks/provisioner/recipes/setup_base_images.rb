@@ -518,6 +518,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers_ips,
                   os: os,
+                  arch: arch,
                   crowbar_key: crowbar_key,
                   domain: domain_name,
                   repos: repos,
