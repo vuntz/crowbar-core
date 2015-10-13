@@ -629,7 +629,6 @@ node[:provisioner][:supported_oses].each do |os, arches|
       node.set[:provisioner][:available_oses][os][arch][:append_line] = append
     end
     node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files
-    node.set[:provisioner][:available_oses][os][arch][:webserver] = admin_web
     node.set[:provisioner][:available_oses][os][arch][:install_name] = role
   end
 end
