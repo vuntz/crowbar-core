@@ -16,13 +16,15 @@
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
-pxecfg_dir = "#{tftproot}/discovery/bios/pxelinux.cfg"
-ueficfg_dir = "#{tftproot}/discovery/efi"
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
 provisioner_web = "http://#{admin_ip}:#{web_port}"
 dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
 virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs"]
+
+discovery_dir = "#{tftproot}/discovery"
+pxecfg_subdir = "bios/pxelinux.cfg"
+uefi_subdir = "efi"
 
 nodes = search(:node, "*:*")
 if not nodes.nil? and not nodes.empty?
@@ -72,8 +74,8 @@ if not nodes.nil? and not nodes.empty?
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
     if boot_ip_hex
-      pxefile = "#{pxecfg_dir}/#{boot_ip_hex}"
-      uefifile = "#{ueficfg_dir}/#{boot_ip_hex}.conf"
+      pxefile = "#{discovery_dir}/#{mnode["kernel"]["machine"]}/#{pxecfg_subdir}/#{boot_ip_hex}"
+      uefifile = "#{discovery_dir}/#{mnode["kernel"]["machine"]}/#{uefi_subdir}/#{boot_ip_hex}.conf"
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{mnode["crowbar"]["boot_ip_hex"]}"
     else
       Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
@@ -143,17 +145,16 @@ if not nodes.nil? and not nodes.empty?
     option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
   }',
              'if option arch = 00:06 {
-    filename = "discovery/efi/bootia32.efi";
+    filename = "discovery/ia32/efi/bootia32.efi";
   } else if option arch = 00:07 {
-    filename = "discovery/efi/bootx64.efi";
+    filename = "discovery/x86_64/efi/bootx64.efi";
   } else if option arch = 00:09 {
-    filename = "discovery/efi/bootx64.efi";
+    filename = "discovery/x86_64/efi/bootx64.efi";
   } else if option arch = 00:0e {
-    option config-file "discovery/bios/pxelinux.cfg/default-ppc64le";
+    option path-prefix "discovery/ppc64le/bios/";
     filename = "";
   } else {
-    option config-file "pxelinux.cfg/default-x86_64";
-    filename = "discovery/bios/pxelinux.0";
+    filename = "discovery/x86_64/bios/pxelinux.0";
   }',
              "next-server #{admin_ip}"
                     ]
