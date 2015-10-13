@@ -176,8 +176,8 @@ if not nodes.nil? and not nodes.empty?
 
         node_cfg_dir="#{tftproot}/nodes/#{mnode[:fqdn]}"
         node_url="#{provisioner_web}/nodes/#{mnode[:fqdn]}"
-        os_url="#{provisioner_web}/#{os}"
-        install_url="#{os_url}/#{arch}/install"
+        os_url="#{provisioner_web}/#{os}/#{arch}"
+        install_url="#{os_url}/install"
 
         directory node_cfg_dir do
           action :create
