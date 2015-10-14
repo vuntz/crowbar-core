@@ -9,15 +9,15 @@ menuentry '<%= @install_name %>' --class os {
      insmod efi_gop
      insmod efi_uga
 
-     # dhcp, tftp server in my network
-     set net_default_server=<%= @admin_ip %>
-
      net_bootp
 
      echo 'Network status: '
      net_ls_cards
      net_ls_addr
      net_ls_routes
+
+     # dhcp, tftp server in my network
+     set net_default_server=<%= @admin_ip %>
 
      echo 'Loading Linux ...'
      linux (tftp)/discovery/<%= @kernel %> <%= @append_line %>

@@ -140,7 +140,16 @@ EOC
 
       package "grub2-#{arch}-efi"
 
-      template "#{uefi_dir}/grub.conf" do
+      # grub.cfg has to be in boot/grub/ subdirectory
+      directory "#{uefi_dir}/boot/grub" do
+        recursive true
+        mode 0755
+        owner "root"
+        group "root"
+        action :create
+      end
+
+      template "#{uefi_dir}/boot/grub/grub.cfg" do
         mode 0644
         owner "root"
         group "root"
@@ -154,9 +163,9 @@ EOC
 
       bash "Build UEFI netboot loader with grub" do
         cwd uefi_dir
-        code "grub2-mkstandalone -d /usr/lib/grub2/#{arch}-efi/ -O #{arch}-efi --fonts=\"unicode\" -o boot#{short_arch}.efi grub.cfg"
+        code "grub2-mkstandalone -d /usr/lib/grub2/#{arch}-efi/ -O #{arch}-efi --fonts=\"unicode\" -o boot#{short_arch}.efi boot/grub/grub.cfg"
         action :nothing
-        subscribes :run, resources("template[#{uefi_dir}/grub.conf]"), :immediately
+        subscribes :run, resources("template[#{uefi_dir}/boot/grub/grub.cfg]"), :immediately
       end
     end
   end
