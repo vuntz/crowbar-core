@@ -99,29 +99,29 @@ class Provisioner
             suse_optional_repos(version, :common).each do |name|
               repos[name] ||= Mash.new
               next unless repos[name][:url].nil?
-              common_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/repos/#{name}/repodata/repomd.xml")
+              common_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
             end
 
             # For cloud
             suse_optional_repos(version, :cloud).each do |name|
               repos[name] ||= Mash.new
               next unless repos[name][:url].nil?
-              cloud_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/repos/#{name}/repodata/repomd.xml") ||
-                                File.exist?("#{node[:provisioner][:root]}/suse-#{version}/repos/#{name}/suse/repodata/repomd.xml")
+              cloud_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml") ||
+                                File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/suse/repodata/repomd.xml")
             end
 
             # For pacemaker
             suse_optional_repos(version, :hae).each do |name|
               repos[name] ||= Mash.new
               next unless repos[name][:url].nil?
-              hae_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/repos/#{name}/repodata/repomd.xml")
+              hae_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
             end
 
             # For suse storage
             suse_optional_repos(version, :storage).each do |name|
               repos[name] ||= Mash.new
               next unless repos[name][:url].nil?
-              storage_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/repos/#{name}/repodata/repomd.xml")
+              storage_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
             end
           end
 
@@ -160,7 +160,7 @@ class Provisioner
         admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
         web_port = provisioner_server_node[:provisioner][:web_port]
         provisioner_web = "http://#{admin_ip}:#{web_port}"
-        default_repos_url = "#{provisioner_web}/suse-#{version}/repos"
+        default_repos_url = "#{provisioner_web}/suse-#{version}/x86_64/repos"
 
         repos = Mash.new
 
