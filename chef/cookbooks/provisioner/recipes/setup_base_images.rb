@@ -400,12 +400,12 @@ node.set[:provisioner][:repositories] = Mash.new
 node.set[:provisioner][:available_oses] = Mash.new
 
 node[:provisioner][:supported_oses].each do |os,params|
-  web_path = "#{provisioner_web}/#{os}"
-  admin_web="#{web_path}/install"
-  crowbar_repo_web="#{web_path}/crowbar-extra"
-  os_dir="#{tftproot}/#{os}"
-  os_codename=node[:lsb][:codename]
-  role="#{os}_install"
+  web_path = "#{provisioner_web}/#{os}/x86_64"
+  admin_web = "#{web_path}/install"
+  crowbar_repo_web = "#{web_path}/crowbar-extra"
+  os_dir = "#{tftproot}/#{os}/x86_64"
+  os_codename = node[:lsb][:codename]
+  role = "#{os}_install"
   missing_files = false
   append = params["append"].dup # We'll modify it inline
   initrd = params["initrd"]
@@ -486,6 +486,7 @@ node[:provisioner][:supported_oses].each do |os,params|
                 web_port: web_port,
                 ntp_servers_ips: ntp_servers_ips,
                 os: os,
+                arch: "x86_64",
                 crowbar_key: crowbar_key,
                 domain: domain_name,
                 repos: repos,
@@ -585,8 +586,8 @@ node[:provisioner][:supported_oses].each do |os,params|
     node.set[:provisioner][:available_oses][os][:initrd] = " "
     node.set[:provisioner][:available_oses][os][:append_line] = " "
   else
-    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/install/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = "../../#{os}/install/#{initrd}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/x86_64/install/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:initrd] = "../../#{os}/x86_64/install/#{initrd}"
     node.set[:provisioner][:available_oses][os][:append_line] = append
   end
   node.set[:provisioner][:available_oses][os][:disabled] = missing_files
