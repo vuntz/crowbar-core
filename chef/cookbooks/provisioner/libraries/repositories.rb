@@ -63,16 +63,18 @@ class Provisioner
         end
       end
 
-      def suse_get_repos_from_attributes(node,platform,version)
+      def suse_get_repos_from_attributes(node, platform, version, arch)
         repos = Mash.new
 
         if node[:provisioner][:suse] && node[:provisioner][:suse][:autoyast] && node[:provisioner][:suse][:autoyast][:repos]
-          if node[:provisioner][:suse][:autoyast][:repos][:common]
-            repos = node[:provisioner][:suse][:autoyast][:repos][:common].to_hash
-          end
+          repos_attrs = node[:provisioner][:suse][:autoyast][:repos]
           product = "#{platform}-#{version}"
-          if node[:provisioner][:suse][:autoyast][:repos][product]
-            repos.merge! node[:provisioner][:suse][:autoyast][:repos][product].to_hash
+
+          if repos_attrs[:common] && repos_attrs[:common][arch]
+            repos = repos_attrs[:common][arch].to_hash
+          end
+          if repos_attrs[product] && repos_attrs[product][arch]
+            repos.merge! repos_attrs[product][arch].to_hash
           end
         end
 
@@ -92,36 +94,40 @@ class Provisioner
           hae_available = false
           storage_available = false
 
-          %w(11.3 11.4 12.0 12.1).each do |version|
-            repos.merge! suse_get_repos_from_attributes(node,"suse",version)
+          node[:provisioner][:supported_oses].each do |os, arches|
+            next unless os =~ /^suse-/
+            version = os.gsub(/^suse-/, "")
+            arches.each do |arch, params|
+              repos.merge! suse_get_repos_from_attributes(node, "suse", version, arch)
 
-            # Common optional repos (regardless of cloud vs. storage)
-            suse_optional_repos(version, :common).each do |name|
-              repos[name] ||= Mash.new
-              next unless repos[name][:url].nil?
-              common_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
-            end
+              # Common optional repos (regardless of cloud vs. storage)
+              suse_optional_repos(version, :common).each do |name|
+                repos[name] ||= Mash.new
+                next unless repos[name][:url].nil?
+                common_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/#{arch}/repos/#{name}/repodata/repomd.xml")
+              end
 
-            # For cloud
-            suse_optional_repos(version, :cloud).each do |name|
-              repos[name] ||= Mash.new
-              next unless repos[name][:url].nil?
-              cloud_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml") ||
-                                File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/suse/repodata/repomd.xml")
-            end
+              # For cloud
+              suse_optional_repos(version, :cloud).each do |name|
+                repos[name] ||= Mash.new
+                next unless repos[name][:url].nil?
+                cloud_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/#{arch}/repos/#{name}/repodata/repomd.xml") ||
+                  File.exist?("#{node[:provisioner][:root]}/suse-#{version}/#{arch}/repos/#{name}/suse/repodata/repomd.xml")
+              end
 
-            # For pacemaker
-            suse_optional_repos(version, :hae).each do |name|
-              repos[name] ||= Mash.new
-              next unless repos[name][:url].nil?
-              hae_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
-            end
+              # For pacemaker
+              suse_optional_repos(version, :hae).each do |name|
+                repos[name] ||= Mash.new
+                next unless repos[name][:url].nil?
+                hae_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/#{arch}/repos/#{name}/repodata/repomd.xml")
+              end
 
-            # For suse storage
-            suse_optional_repos(version, :storage).each do |name|
-              repos[name] ||= Mash.new
-              next unless repos[name][:url].nil?
-              storage_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/x86_64/repos/#{name}/repodata/repomd.xml")
+              # For suse storage
+              suse_optional_repos(version, :storage).each do |name|
+                repos[name] ||= Mash.new
+                next unless repos[name][:url].nil?
+                storage_available ||= File.exist?("#{node[:provisioner][:root]}/suse-#{version}/#{arch}/repos/#{name}/repodata/repomd.xml")
+              end
             end
           end
 
@@ -156,18 +162,18 @@ class Provisioner
       # This returns a hash containing the data about the repos that must be
       # used on nodes; optional repos (such as HA) will only be returned if
       # they can be used.
-      def get_repos(provisioner_server_node, platform, version)
+      def get_repos(provisioner_server_node, platform, version, arch)
         admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
         web_port = provisioner_server_node[:provisioner][:web_port]
         provisioner_web = "http://#{admin_ip}:#{web_port}"
-        default_repos_url = "#{provisioner_web}/suse-#{version}/x86_64/repos"
+        default_repos_url = "#{provisioner_web}/suse-#{version}/#{arch}/repos"
 
         repos = Mash.new
 
         case platform
         when "suse"
           repos = Mash.new
-          repos_from_attrs = suse_get_repos_from_attributes(provisioner_server_node,platform,version)
+          repos_from_attrs = suse_get_repos_from_attributes(provisioner_server_node, platform, version, arch)
 
           case version
           when "11.3"

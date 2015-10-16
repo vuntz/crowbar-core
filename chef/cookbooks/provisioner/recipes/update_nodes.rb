@@ -197,7 +197,7 @@ if not nodes.nil? and not nodes.empty?
           os = node[:provisioner][:default_os]
         end
 
-        append << node[:provisioner][:available_oses][os][:append_line]
+        append << node[:provisioner][:available_oses][os][arch][:append_line]
 
         node_cfg_dir = "#{tftproot}/nodes/#{mnode[:fqdn]}"
         node_url = "#{provisioner_web}/nodes/#{mnode[:fqdn]}"
@@ -246,7 +246,7 @@ if not nodes.nil? and not nodes.empty?
                       web_port: web_port,
                       node_name: mnode[:fqdn],
                       boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
-                      repos: node[:provisioner][:repositories][os],
+                      repos: node[:provisioner][:repositories][os][arch],
                       uefi: mnode[:uefi],
                       admin_web: install_url,
                       timezone: timezone,
@@ -259,7 +259,7 @@ if not nodes.nil? and not nodes.empty?
 
           Provisioner::Repositories.inspect_repos(node)
           target_platform_version = os.gsub(/^.*-/, "")
-          repos = Provisioner::Repositories.get_repos(node, "suse", target_platform_version)
+          repos = Provisioner::Repositories.get_repos(node, "suse", target_platform_version, arch)
           Chef::Log.info("repos: #{repos.inspect}")
 
           if node[:provisioner][:suse]
@@ -339,10 +339,10 @@ if not nodes.nil? and not nodes.empty?
         end
 
         append_line = append.join(" ")
-        install_name = node[:provisioner][:available_oses][os][:install_name]
+        install_name = node[:provisioner][:available_oses][os][arch][:install_name]
         install_label = "OS Install (#{os})"
-        initrd = node[:provisioner][:available_oses][os][:initrd]
-        kernel = node[:provisioner][:available_oses][os][:kernel]
+        initrd = node[:provisioner][:available_oses][os][arch][:initrd]
+        kernel = node[:provisioner][:available_oses][os][arch][:kernel]
 
       else
 
