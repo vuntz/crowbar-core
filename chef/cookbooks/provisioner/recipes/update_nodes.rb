@@ -72,6 +72,8 @@ if not nodes.nil? and not nodes.empty?
       end
     end
 
+    arch = mnode[:kernel][:machine]
+
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
@@ -199,7 +201,7 @@ if not nodes.nil? and not nodes.empty?
 
         node_cfg_dir = "#{tftproot}/nodes/#{mnode[:fqdn]}"
         node_url = "#{provisioner_web}/nodes/#{mnode[:fqdn]}"
-        os_url = "#{provisioner_web}/#{os}/x86_64"
+        os_url = "#{provisioner_web}/#{os}/#{arch}"
         install_url = "#{os_url}/install"
 
         directory node_cfg_dir do
