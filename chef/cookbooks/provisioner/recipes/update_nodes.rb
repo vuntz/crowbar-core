@@ -321,7 +321,8 @@ if not nodes.nil? and not nodes.empty?
                       admin_name: node[:hostname],
                       crowbar_key: crowbar_key,
                       admin_password: node[:provisioner][:windows][:admin_password],
-                      domain_name: node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain]))
+                      domain_name: node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain]),
+                      architecture: arch)
           end
 
           link windows_tftp_file do

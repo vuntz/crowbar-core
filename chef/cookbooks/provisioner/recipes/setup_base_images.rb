@@ -361,9 +361,16 @@ unless default_os = node[:provisioner][:default_os]
   node.save
 end
 
-unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/ =~ os }.empty?
-  common_dir="#{tftproot}/windows-common"
-  extra_dir="#{common_dir}/extra"
+windows_oses = node[:provisioner][:supported_oses].keys.select { |os| /^(hyperv|windows)/ =~ os }
+windows_arches = []
+windows_oses.each do |windows_os|
+  windows_arches << node[:provisioner][:supported_oses][windows_os].keys
+end
+windows_arches.flatten!.uniq!
+
+unless windows_arches.empty?
+  common_dir = "#{tftproot}/windows-common"
+  extra_dir = "#{common_dir}/noarch/extra"
 
   directory "#{extra_dir}" do
     recursive true
@@ -391,6 +398,34 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
     source "set_hostname.ps1"
   end
 
+  # Create tftp helper directory
+  directory "#{common_dir}/tftp" do
+    mode 0755
+    owner "root"
+    group "root"
+    action :create
+  end
+
+  # Ensure the adk-tools directory exists
+  directory "#{tftproot}/adk-tools" do
+    mode 0755
+    owner "root"
+    group "root"
+    action :create
+  end
+end
+
+windows_arches.each do |arch|
+  extra_dir="#{tftproot}/windows-common/#{arch}/extra"
+
+  directory "#{extra_dir}" do
+    recursive true
+    mode 0755
+    owner "root"
+    group "root"
+    action :create
+  end
+
   # Copy the script required for setting the installed state
   template "#{extra_dir}/set_state.ps1" do
     owner "root"
@@ -398,7 +433,8 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
     mode "0644"
     source "set_state.ps1.erb"
     variables(crowbar_key: crowbar_key,
-              admin_ip: admin_ip)
+              admin_ip: admin_ip,
+              architecture: arch)
   end
 
   # Also copy the required files to install chef-client and communicate with Crowbar
@@ -424,22 +460,6 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
     mode "0644"
     action :create
     source "curl.COPYING"
-  end
-
-  # Create tftp helper directory
-  directory "#{common_dir}/tftp" do
-    mode 0755
-    owner "root"
-    group "root"
-    action :create
-  end
-
-  # Ensure the adk-tools directory exists
-  directory "#{tftproot}/adk-tools" do
-    mode 0755
-    owner "root"
-    group "root"
-    action :create
   end
 end
 
@@ -597,36 +617,39 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
 
     when /^(hyperv|windows)/ =~ os
-      # Windows is x86_64-only
-      os_dir = "#{tftproot}/#{os}"
-
-      template "#{tftproot}/adk-tools/build_winpe_#{os}.ps1" do
+      template "#{tftproot}/adk-tools/build_winpe_#{os}_#{arch}.ps1" do
         mode 0644
         owner "root"
         group "root"
         source "build_winpe_os.ps1.erb"
         variables(os: os,
-                  admin_ip: admin_ip)
+                  admin_ip: admin_ip,
+                  architecture: arch)
       end
 
       directory "#{os_dir}" do
+        recursive true
         mode 0755
         owner "root"
         group "root"
         action :create
       end
 
-      # Let's stay compatible with the old code and remove the per-version extra directory
+      # Remove old files, before multi-arch support and full move to windows-common for extra
+      if File.exists? "#{tftproot}/adk-tools/build_winpe_#{os}.ps1"
+        file "#{tftproot}/adk-tools/build_winpe_#{os}.ps1" do
+          action :delete
+        end
+      end
       if File.directory? "#{os_dir}/extra"
         directory "#{os_dir}/extra" do
           recursive true
           action :delete
         end
-      end
-
-      link "#{os_dir}/extra" do
-        action :create
-        to "../windows-common/extra"
+      elsif File.exists? "#{os_dir}/extra"
+        file "#{os_dir}/extra" do
+          action :delete
+        end
       end
 
       missing_files = !File.exist?("#{os_dir}/boot/bootmgr.exe")
