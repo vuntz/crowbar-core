@@ -89,7 +89,7 @@ if not nodes.nil? and not nodes.empty?
         grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
         grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
       end
-      windows_tftp_file = "#{tftproot}/windows-common/tftp/#{mnode["crowbar"]["boot_ip_hex"]}"
+      windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
       Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
       pxefile = nil
