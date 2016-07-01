@@ -11,8 +11,8 @@
       "crowbar-revision": 0,
       "crowbar-applied": false,
       "element_states": {
-        "logging-server": [ "readying", "ready", "applying" ],
-        "logging-client": [ "readying", "ready", "applying" ]
+        "logging-server": [ "ready", "applying" ],
+        "logging-client": [ "ready", "applying" ]
       },
       "elements": {},
       "element_order": [

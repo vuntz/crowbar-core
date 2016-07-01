@@ -21,7 +21,7 @@
       "crowbar-applied": false,
       "elements": {},
       "element_states": {
-        "updater": [ "readying", "ready", "applying" ]
+        "updater": [ "ready", "applying" ]
       },
       "element_order": [
         [ "updater" ]

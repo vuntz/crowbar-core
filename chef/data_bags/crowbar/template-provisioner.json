@@ -202,8 +202,8 @@
       "schema-revision": 100,
       "element_states": {
         "provisioner-bootdisk-finder": [ "hardware-installing" ],
-        "provisioner-server": [ "readying", "ready", "applying" ],
-        "provisioner-base": [ "readying", "ready", "applying" ]
+        "provisioner-server": [ "ready", "applying" ],
+        "provisioner-base": [ "ready", "applying" ]
       },
       "elements": {},
       "element_order": [

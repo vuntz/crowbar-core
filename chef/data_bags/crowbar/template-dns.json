@@ -17,7 +17,7 @@
       "crowbar-applied": false,
       "schema-revision": 4,
       "element_states": {
-        "dns-server": [ "readying", "ready", "applying" ],
+        "dns-server": [ "ready", "applying" ],
         "dns-client": [ "all" ]
       },
       "elements": {},
