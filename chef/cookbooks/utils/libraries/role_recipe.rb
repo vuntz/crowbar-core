@@ -17,6 +17,21 @@ module CrowbarRoleRecipe
   # Helper to decide whether a role should be run for a node, depending on the
   # state of the node.
   def self.node_state_valid_for_role?(node, barclamp, role)
+    if node[:state] == "applying"
+      # we always want deployer-client, both for heartbeat but also because it
+      # sets up the ability to use the barclamp library
+      if role == "deployer-client" || \
+          (node["crowbar"]["applying_for"].key?(barclamp) && \
+           node["crowbar"]["applying_for"][barclamp].include?(role))
+         return true
+       else
+         roles = node["crowbar"]["applying_for"].collect { |k, v| v }.flatten.sort.uniq
+         Chef::Log.info("Skipping role \"#{role}\" because node is applying. " \
+             "Only the following roles are considered: #{roles.join}.")
+         return false
+       end
+    end
+
     if node.key? barclamp
       states_for_role = if node[barclamp].key? "element_states"
         # if nil, then this means all states are valid
