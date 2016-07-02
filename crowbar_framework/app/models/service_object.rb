@@ -164,22 +164,22 @@ class ServiceObject
     end
   end
 
-  def restore_node_to_ready(node)
-    node.crowbar["state"] = "ready"
-    node.crowbar["state_owner"] = ""
-    node.save
-  end
-
   def restore_to_ready(nodes)
     with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = NodeObject.find_node_by_name(node_name)
+        next if node.nil?
+
         # Nodes with 'crowbar_upgrade' state need to stay in that state
         # even after applying relevant roles. They could be brought back to
         # being ready only by explicit user's action.
-        next if node.nil? || node.crowbar["state"] == "crowbar_upgrade"
+        if node.crowbar["state"] != "crowbar_upgrade"
+          node.crowbar["state"] = "ready"
+          node.crowbar["state_owner"] = ""
+        end
 
-        restore_node_to_ready(node)
+        node["crowbar"]["applying_for"] = {}
+        node.save
       end
     end
   end
@@ -1131,14 +1131,14 @@ class ServiceObject
         end
       end # roles.each
 
-      batches << nodes_in_batch unless nodes_in_batch.empty?
+      batches << [roles, nodes_in_batch] unless nodes_in_batch.empty?
     end
     @logger.debug "batches: #{batches.inspect}"
 
     # save databag with the role removal intention
     proposal.save if save_proposal
 
-    applying_nodes = batches.flatten.uniq.sort
+    applying_nodes = batches.map { |roles, nodes| nodes }.flatten.uniq.sort
 
     # Mark nodes as applying; beware that all_nodes do not contain nodes that
     # are actually removed.
@@ -1274,14 +1274,20 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    batches.each do |nodes|
-      @logger.debug "Applying batch: #{nodes.inspect}"
+    batches.each do |roles, nodes|
+      @logger.debug "Applying batch: #{nodes.inspect} for #{roles.inspect}"
 
       pids = {}
       nodes.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
-        next if pre_cached_nodes[node][:platform_family] == "windows"
-        ran_admin = true if pre_cached_nodes[node].admin?
+        nobj = pre_cached_nodes[node]
+
+        next if nobj[:platform_family] == "windows"
+        ran_admin = true if nobj.admin?
+
+        nobj["crowbar"]["applying_for"] = {}
+        nobj["crowbar"]["applying_for"][@bc_name] = roles
+        nobj.save
 
         filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
         pid = run_remote_chef_client(node, "chef-client", filename)
@@ -1289,6 +1295,9 @@ class ServiceObject
       end
       status = Process.waitall
       badones = status.select { |x| x[1].exitstatus != 0 }
+
+      # Invalidate cache as chef might have saved the nodes
+      pre_cached_nodes = {}
 
       next if badones.empty?
 
