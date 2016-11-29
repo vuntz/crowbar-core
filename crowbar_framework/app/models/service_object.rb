@@ -1303,6 +1303,10 @@ class ServiceObject
       non_admin_nodes = []
       admin_list = []
       batch.each do |node_name|
+        if skip_batch_for_node(batch, node_name, old_role, role)
+          @logger.debug("AR: Skipping batch for #{node_name}: no change")
+          next
+        end
         # Run admin nodes a different way.
         if admin_nodes.include?(node_name)
           @logger.debug "#{node_name} is in admin_nodes #{admin_nodes.inspect}"
@@ -1453,6 +1457,11 @@ class ServiceObject
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     # noop by default.
+  end
+
+  def skip_batch_for_node(batch, node, old_role, new_role)
+    # by default, never skip anything
+    false
   end
 
   def apply_role_post_chef_call(old_role, role, all_nodes)
