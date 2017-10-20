@@ -989,24 +989,28 @@ class ServiceObject
       end
     end
 
+    modified_elements = nil
+    pre_cached_nodes = {}
+
     # When bootstrapping, we don't run chef, so there's no need for queuing
     if bootstrap
-      pre_cached_nodes = {}
       # do not try to process the queue in any case
       in_queue = true
     else
       # Attempt to queue the proposal.  If delay is empty, then run it.
       deps = proposal_dependencies(role)
+      operate_on_these_elements = new_elements
       if skip_unready_nodes_enabled
-        elements_without_unready, pre_cached_nodes = skip_unready_nodes(
-          @bc_name, inst, new_elements, old_elements
+        modified_elements, pre_cached_nodes = skip_unready_nodes(
+          @bc_name, inst, operate_on_these_elements, old_elements
         )
-        delay, pre_cached_nodes = queue_proposal(
-          inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes
-        )
-      else
-        delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
+        operate_on_these_elements = modified_elements
       end
+      if skip_unchanged_nodes_enabled
+        modified_elements, pre_cached_nodes = skip_unchanged_nodes(blabla, operate_on_these_elements)
+        operate_on_these_elements = modified_elements
+      end
+      delay, pre_cached_nodes = queue_proposal(inst, element_order, operate_on_these_elements, deps, @bc_name, pre_cached_nodes)
 
       unless delay.empty?
         # force not processing the queue further
@@ -1034,10 +1038,10 @@ class ServiceObject
       new_deployment.delete("elements_expanded")
     end
 
-    if skip_unready_nodes_enabled
+    unless modified_elements.nil?
       # if we have removed nodes from the list, make sure to expand them and overwrite the
       # new_elements var so we dont try to run chef-client on those not-ready nodes
-      new_elements, failures, msg = expand_items_in_elements(elements_without_unready)
+      new_elements, failures, msg = expand_items_in_elements(modified_elements)
       unless failures.nil?
         Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
         update_proposal_status(inst, "failed", msg)
